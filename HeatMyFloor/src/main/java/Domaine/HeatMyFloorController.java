@@ -1,0 +1,55 @@
+package Domaine;
+
+import Domaine.DTO.MeubleDTO;
+import Domaine.DTO.PieceDTO;
+import Domaine.Entite.Meuble;
+import Domaine.Entite.MeubleAvecDrain;
+import Domaine.Entite.MeubleSansDrain;
+import Domaine.Entite.Piece;
+import java.awt.Polygon;
+import java.util.ArrayList;
+
+public class HeatMyFloorController {
+    
+    private Piece maPiece = new Piece();
+    
+    public HeatMyFloorController()
+    {
+
+    }
+    
+    public void InitialiserPiece(Polygon forme)
+    {
+        maPiece.setForme(forme);
+    }
+    
+    // TODO : Créer une nouvelle pièece au clic de bouton
+    public void CreerPiece(PieceDTO p_piece)
+    {
+    }
+    
+    public PieceDTO ObtenirPiece()
+    {
+        return new PieceDTO(maPiece);
+    }
+    
+    // TODO : Ajouter un nouveau meuble
+    public void AjouterMeuble(MeubleDTO dto)
+    {
+        
+    }
+            
+    public ArrayList<MeubleDTO> ObtenirMeubles()
+    {
+        ArrayList<MeubleDTO> dtos = new ArrayList<>();
+        for (Meuble meuble : maPiece.getMeubles())
+        {
+            if (meuble instanceof MeubleAvecDrain meubleAvecDrain)
+                dtos.add(new MeubleDTO(meubleAvecDrain));
+            else
+                dtos.add(new MeubleDTO((MeubleSansDrain)meuble));
+        }
+        
+        return dtos;
+    }
+}
