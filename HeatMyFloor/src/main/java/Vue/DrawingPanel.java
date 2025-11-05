@@ -22,7 +22,9 @@ public class DrawingPanel extends JPanel{
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         Dimension currentSize = getSize();
-        mainWindow.controller.InitialiserPiece(CreerFormeRegulierePiece(currentSize));
+        if (!mainWindow.controller.estInitialise())
+            mainWindow.controller.InitialiserPiece(CreerFormeRegulierePiece(currentSize));
+            
         MainDrawer mainDrawer = new MainDrawer(mainWindow.controller);
         mainDrawer.draw(g, currentSize);
     }

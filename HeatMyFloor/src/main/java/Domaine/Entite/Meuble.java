@@ -8,6 +8,10 @@ public abstract class Meuble {
     private Point position;
     private int longueur;
     private int largeur;
+    private String nom;
+    
+    private boolean estSelectionne = false;
+    
     public final UUID id = UUID.randomUUID();
     
     public Meuble(MeubleDTO dto)
@@ -45,5 +49,30 @@ public abstract class Meuble {
     public void setLargeur(int newLargeur)
     {
         largeur = newLargeur;
-    }     
+    }  
+    
+    public String getNom()
+    {
+        return nom;
+    }
+    
+    public void setNom(String newNom)
+    {
+        nom = newNom;
+    }
+    
+    public UUID getId()
+    {
+        return id;
+    }
+    
+    public boolean estSelectionne()
+    {
+        return estSelectionne == true;
+    }        
+    
+    public void ChangerStatut()
+    {
+        estSelectionne = !estSelectionne;
+    }
 }

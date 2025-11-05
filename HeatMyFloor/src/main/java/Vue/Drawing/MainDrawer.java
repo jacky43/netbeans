@@ -32,12 +32,19 @@ public class MainDrawer {
         g.setColor(Color.BLACK);
         g.drawPolygon(piece.getForme());
         
+        drawMeubles(g, piece.getMeubles());
     }
     
     public void drawMeubles(Graphics g, ArrayList<MeubleDTO> p_meubles)
     {
         for (MeubleDTO meuble : p_meubles)
         {
+            g.setColor(Color.DARK_GRAY);
+            g.fillRect(meuble.getPosition().x, 
+                       meuble.getPosition().y, 
+                       meuble.getLargeur(), 
+                       meuble.getLongueur());
+            g.setColor(Color.BLACK);
             g.drawRect(meuble.getPosition().x, 
                        meuble.getPosition().y, 
                        meuble.getLargeur(), 
@@ -45,6 +52,12 @@ public class MainDrawer {
             
             if (meuble.estAvecDrain())
             {
+                g.setColor(Color.RED);
+                g.fillRect(meuble.getCentreDrain().x, 
+                           meuble.getCentreDrain().y, 
+                           LARGEUR_DRAIN, 
+                           LONGUEUR_DRAIN);
+                g.setColor(Color.BLACK);
                 g.drawRect(meuble.getCentreDrain().x, 
                            meuble.getCentreDrain().y, 
                            LARGEUR_DRAIN, 
