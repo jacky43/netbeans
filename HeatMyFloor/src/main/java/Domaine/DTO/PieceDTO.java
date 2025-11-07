@@ -8,16 +8,18 @@ import java.util.ArrayList;
 public class PieceDTO {
     
     private Polygon forme;
-    private ArrayList<MeubleDTO> meubles = new ArrayList<>();
+    private ArrayList<MeubleDTO> meubles;
     
     public PieceDTO(Polygon p_forme)
     {   
         forme = p_forme;
+        meubles = new ArrayList<>();
     }
     
     public PieceDTO(Piece p_piece)
     {   
         forme = p_piece.getForme();
+        meubles = new ArrayList<>();
         for (Meuble meuble : p_piece.getMeubles())
             meubles.add(new MeubleDTO(meuble));
     }

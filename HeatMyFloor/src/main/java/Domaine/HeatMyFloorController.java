@@ -13,16 +13,20 @@ import java.util.UUID;
 
 public class HeatMyFloorController {
     
-    private Piece maPiece = new Piece();
-    private boolean estInitialise = false;
+    private Piece maPiece;
+    private boolean estInitialise;
     
     public HeatMyFloorController()
     {
-
+        maPiece = new Piece();
+        estInitialise = false;
     }
     
     public void InitialiserPiece(Polygon forme)
     {
+        if(forme == null){
+            throw new IllegalArgumentException("La forme ne peut pas être null");
+        }
         maPiece.setForme(forme);
         estInitialise = true;
     }
@@ -41,10 +45,17 @@ public class HeatMyFloorController {
     // TODO : Ajouter un nouveau meuble
     public void AjouterMeuble(MeubleDTO dto)
     {
-        if (!dto.estAvecDrain())
-        {
-            maPiece.AjouterMeuble(new MeubleSansDrain(dto));
-        }
+        // TODO : Retirer gestion de l'exception mais afficher message dans le zone d'information
+        if (dto == null)
+            throw new IllegalArgumentException("Le DTO ne peut pas être null");
+        
+        Meuble nouveauMeuble;
+        if(dto.estAvecDrain())
+            nouveauMeuble = new MeubleAvecDrain(dto);
+        else
+            nouveauMeuble = new MeubleSansDrain(dto);
+        
+        maPiece.AjouterMeuble(nouveauMeuble);
     }
             
     public ArrayList<MeubleDTO> ObtenirMeubles()
@@ -62,7 +73,7 @@ public class HeatMyFloorController {
     
     public boolean estInitialise()
     {
-        return estInitialise == true;
+        return estInitialise;
     }
     
     // TODO : Convertir en dimension (retourner la forme)
@@ -73,6 +84,10 @@ public class HeatMyFloorController {
     
     public void SelectionnerElement(Point position)
     {
+        // TODO : Retirer gestion de l'exception mais afficher message dans le zone d'information
+        if (position == null)
+            throw new IllegalArgumentException("La position ne peut pas être null");
+        
         maPiece.SelectionnerElement(position);
     }
     
@@ -80,5 +95,10 @@ public class HeatMyFloorController {
     public void SupprimerMeuble(UUID id)
     {
         // TODO : Appeler la méthode de la pièce
+    }
+    
+    public void AfficherMessageErreur(String message)
+    {
+        // TODO : 
     }
 }

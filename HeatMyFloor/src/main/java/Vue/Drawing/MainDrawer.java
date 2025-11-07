@@ -13,6 +13,7 @@ public class MainDrawer {
     private final HeatMyFloorController controller;
     private final int LONGUEUR_DRAIN = 5;
     private final int LARGEUR_DRAIN = 5;
+    private final int OFFSET_SELECTION = 3;
     
     public MainDrawer(HeatMyFloorController p_controller)
     {
@@ -50,6 +51,14 @@ public class MainDrawer {
                        meuble.getLargeur(), 
                        meuble.getLongueur());
             
+            if (meuble.estSelectionne())
+            {
+                g.setColor(Color.RED);            
+                g.drawRect(meuble.getPosition().x, 
+                           meuble.getPosition().y, 
+                           meuble.getLargeur(), 
+                           meuble.getLongueur());
+            }   
             if (meuble.estAvecDrain())
             {
                 g.setColor(Color.RED);

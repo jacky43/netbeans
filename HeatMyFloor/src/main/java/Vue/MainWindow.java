@@ -273,20 +273,29 @@ public class MainWindow extends javax.swing.JFrame {
         positionXJText.setText(Integer.toString(positionSouris.x));
         positionYJText.setText(Integer.toString(positionSouris.y));
         controller.SelectionnerElement(positionSouris);
+        rafraichirVue();
     } 
         
     private void ajoutMeubleSDButtonActionPerformed(java.awt.event.ActionEvent evt) 
     {
         Point positionPiece = controller.getPositionPiece();
-        MeubleDTO dto = new MeubleDTO(new Point(100 +  + positionPiece.x, 100 + positionPiece.y), 
-                        50, 50, (String)meubleSansDrainBox.getSelectedItem());
+        var typeMeuble = (String) meubleSansDrainBox.getSelectedItem();
+        MeubleDTO dto = new MeubleDTO(
+                new Point(100 + positionPiece.x, 100 + positionPiece.y), 
+                50, 50, 
+                typeMeuble
+        );
         controller.AjouterMeuble(dto);
-        drawingPanel.repaint();
+        rafraichirVue();
     }
     
     // TODO : Finaliser la conversion
     private Point convertPixelsToInches(Point mousePoint, double zoom)
     {
         return new Point(0, 0);
+    }
+    
+    private void rafraichirVue(){
+        drawingPanel.repaint();
     }
 }

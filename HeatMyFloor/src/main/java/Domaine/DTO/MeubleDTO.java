@@ -13,6 +13,7 @@ public class MeubleDTO {
     private int largeur;
     private Point centreDrain;
     private String nom;
+    private boolean estSelectionne;
     //private final UUID id;
     
     public MeubleDTO(Point p_position, 
@@ -24,6 +25,7 @@ public class MeubleDTO {
         longueur = p_longueur;
         largeur = p_largeur;
         nom = p_nom;
+        estSelectionne = false;
     }
         
     public MeubleDTO(Point p_position, 
@@ -37,6 +39,7 @@ public class MeubleDTO {
         largeur = p_largeur;
         nom = p_nom;
         centreDrain = p_centreDrain;
+        estSelectionne = false;
     }
     
     // TODO : Meuble Sans Drain
@@ -47,6 +50,7 @@ public class MeubleDTO {
         largeur = p_meuble.getLargeur();
         nom = p_meuble.getNom();
         //id = p_meuble.getId();
+        estSelectionne = p_meuble.estSelectionne();
     }
     
     public MeubleDTO(MeubleAvecDrain p_meuble)
@@ -55,6 +59,7 @@ public class MeubleDTO {
         longueur = p_meuble.getLongueur();
         largeur = p_meuble.getLargeur();
         centreDrain = p_meuble.getCentreDrain();
+        estSelectionne = false;
     }
     
     public MeubleDTO(MeubleSansDrain p_meuble)
@@ -62,6 +67,7 @@ public class MeubleDTO {
         position = p_meuble.getPosition();
         longueur = p_meuble.getLongueur();
         largeur = p_meuble.getLargeur();
+        estSelectionne = false;
     }
     
     public boolean estAvecDrain()
@@ -107,5 +113,10 @@ public class MeubleDTO {
     public void setCentreDrain(Point p_centreDrain)
     {
         centreDrain = p_centreDrain;
+    }
+    
+    public boolean estSelectionne()
+    {
+        return estSelectionne == true;
     }
 }

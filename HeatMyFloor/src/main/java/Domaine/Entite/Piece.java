@@ -9,11 +9,11 @@ import java.util.UUID;
 public class Piece {
     
     private Polygon forme;
-    private ArrayList<Meuble> meubles = new ArrayList<>();
+    private ArrayList<Meuble> meubles;
     
     public Piece()
     {
-        
+        meubles = new ArrayList<>();
     }
     
     public Polygon getForme()
@@ -47,8 +47,10 @@ public class Piece {
     {
         for (Meuble meuble : meubles)
         {
-            if (meuble.getPosition().x + meuble.getLargeur() <= p_position.x &&
-                meuble.getPosition().y + meuble.getLongueur() <= p_position.y)
+            if (meuble.getPosition().x <= p_position.x &&
+                meuble.getPosition().x + meuble.getLargeur() >= p_position.x &&
+                meuble.getPosition().y <= p_position.y &&
+                meuble.getPosition().y + meuble.getLongueur() >= p_position.y)
             {
                 meuble.ChangerStatut();
                 break;
