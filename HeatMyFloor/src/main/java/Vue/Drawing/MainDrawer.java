@@ -13,7 +13,6 @@ public class MainDrawer {
     private final HeatMyFloorController controller;
     private final int LONGUEUR_DRAIN = 5;
     private final int LARGEUR_DRAIN = 5;
-    private final int OFFSET_SELECTION = 3;
     
     public MainDrawer(HeatMyFloorController p_controller)
     {

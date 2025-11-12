@@ -22,4 +22,10 @@ public class MeubleAvecDrain extends Meuble{
     {
         centreDrain = p_centreDrain;
     }
+    
+    @Override
+    public MeubleDTO ToDto()
+    {
+        return new MeubleDTO(this);
+    }
 }

@@ -8,4 +8,10 @@ public class MeubleSansDrain extends Meuble{
     {
         super(dto);
     }
+    
+    @Override
+    public MeubleDTO ToDto()
+    {
+        return new MeubleDTO(this);
+    }
 }
