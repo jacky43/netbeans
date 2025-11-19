@@ -65,8 +65,8 @@ public class HeatMyFloorController {
         return construireMeubleDto(elementSelectionne);
     }
     
-    public boolean ModifierMeubleSelectionne(Point nouvellePosition, int nouvelleLargeur, int nouvelleLongueur)
-    {
+    public boolean ModifierMeubleSelectionne(Point nouvellePosition, int nouvelleLargeur, int nouvelleLongueur) 
+    {  
         return maPiece.ModifierMeubleSelectionne(nouvellePosition, nouvelleLargeur, nouvelleLongueur);
     }
     
@@ -101,5 +101,9 @@ public class HeatMyFloorController {
     public Point ObtenirOrigine()
     {
         return maPiece.ObtenirOrigine();
+    }
+    
+    public Domaine.Entite.ElementSelectionnable ObtenirElementSelectionneDirect() {
+        return maPiece.ObtenirElementSelectionne();
     }
 }

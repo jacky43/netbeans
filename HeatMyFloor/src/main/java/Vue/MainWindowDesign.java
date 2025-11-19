@@ -32,8 +32,8 @@ public class MainWindowDesign extends javax.swing.JFrame {
         modelisationTypesBox = new javax.swing.JComboBox<>();
         undoButton = new javax.swing.JButton();
         redoButton = new javax.swing.JButton();
-        ajoutMeubleSDButton = new javax.swing.JButton();
-        meubleSansDrainBox = new javax.swing.JComboBox<>();
+        ajoutMeubleButton = new javax.swing.JButton();
+        meubleBox = new javax.swing.JComboBox<>();
         supprimerMeuble = new javax.swing.JButton();
         modifierMeuble = new javax.swing.JButton();
         InformationZoneBottomPanel = new javax.swing.JPanel();
@@ -47,7 +47,8 @@ public class MainWindowDesign extends javax.swing.JFrame {
         largeurJLabel = new javax.swing.JLabel();
         positionXJLabel = new javax.swing.JLabel();
         positionYJLabel = new javax.swing.JLabel();
-        jComboBox1 = new javax.swing.JComboBox<>();
+        diametreJText = new javax.swing.JTextField();
+        diametreJLabel = new javax.swing.JLabel();
         mainMenuBar = new javax.swing.JMenuBar();
         fichierMenu = new javax.swing.JMenu();
         nouvelleModelisationMenu = new javax.swing.JMenu();
@@ -93,16 +94,16 @@ public class MainWindowDesign extends javax.swing.JFrame {
         redoButton.setText("Redo");
         buttonTopPanel.add(redoButton);
 
-        ajoutMeubleSDButton.setText("Ajouter Meuble sans drain");
-        ajoutMeubleSDButton.addActionListener(new java.awt.event.ActionListener() {
+        ajoutMeubleButton.setText("Ajouter Meuble ");
+        ajoutMeubleButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                ajoutMeubleSDButtonActionPerformed(evt);
+                ajoutMeubleButtonActionPerformed(evt);
             }
         });
-        buttonTopPanel.add(ajoutMeubleSDButton);
+        buttonTopPanel.add(ajoutMeubleButton);
 
-        meubleSansDrainBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "ARMOIRE", "PLACARD" }));
-        buttonTopPanel.add(meubleSansDrainBox);
+        meubleBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "ARMOIRE", "BAIN", "DOUCHE", "PLACARD", "TOILETTE", "VANITE" }));
+        buttonTopPanel.add(meubleBox);
 
         supprimerMeuble.setText("Supprimer meuble");
         buttonTopPanel.add(supprimerMeuble);
@@ -128,6 +129,11 @@ public class MainWindowDesign extends javax.swing.JFrame {
         mainPanel.add(InformationZoneBottomPanel, java.awt.BorderLayout.SOUTH);
 
         drawingCenterPanel.setPreferredSize(new java.awt.Dimension(250, 350));
+        drawingCenterPanel.addMouseWheelListener(new java.awt.event.MouseWheelListener() {
+            public void mouseWheelMoved(java.awt.event.MouseWheelEvent evt) {
+                drawingCenterPanelMouseWheelMoved(evt);
+            }
+        });
         drawingCenterPanel.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 drawingCenterPanelMouseClicked(evt);
@@ -168,35 +174,31 @@ public class MainWindowDesign extends javax.swing.JFrame {
 
         positionYJLabel.setText("Position Y");
 
-        jComboBox1.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Bonbon", "biscuits" }));
+        diametreJText.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                diametreJTextActionPerformed(evt);
+            }
+        });
+
+        diametreJLabel.setText("Diamètre drain");
 
         javax.swing.GroupLayout choixRightPanelLayout = new javax.swing.GroupLayout(choixRightPanel);
         choixRightPanel.setLayout(choixRightPanelLayout);
         choixRightPanelLayout.setHorizontalGroup(
             choixRightPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(choixRightPanelLayout.createSequentialGroup()
-                .addGroup(choixRightPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(choixRightPanelLayout.createSequentialGroup()
-                        .addGap(37, 37, 37)
-                        .addComponent(longueurJLabel))
-                    .addGroup(choixRightPanelLayout.createSequentialGroup()
-                        .addGap(42, 42, 42)
-                        .addComponent(largeurJLabel))
-                    .addGroup(choixRightPanelLayout.createSequentialGroup()
-                        .addGap(29, 29, 29)
-                        .addGroup(choixRightPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addGroup(choixRightPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                .addComponent(positionYJText, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGroup(choixRightPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                    .addComponent(largeurJText)
-                                    .addGroup(choixRightPanelLayout.createSequentialGroup()
-                                        .addGap(9, 9, 9)
-                                        .addGroup(choixRightPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                            .addComponent(positionYJLabel)
-                                            .addComponent(positionXJLabel)))
-                                    .addComponent(longeurJText)
-                                    .addComponent(positionXJText, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))))))
+                .addGap(29, 29, 29)
+                .addGroup(choixRightPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(longueurJLabel)
+                    .addComponent(diametreJLabel)
+                    .addComponent(positionYJText)
+                    .addComponent(positionXJLabel)
+                    .addComponent(largeurJLabel)
+                    .addComponent(positionXJText, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(largeurJText)
+                    .addComponent(longeurJText)
+                    .addComponent(positionYJLabel)
+                    .addComponent(diametreJText))
                 .addContainerGap(21, Short.MAX_VALUE))
         );
         choixRightPanelLayout.setVerticalGroup(
@@ -218,9 +220,11 @@ public class MainWindowDesign extends javax.swing.JFrame {
                 .addComponent(positionYJLabel)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(positionYJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 40, Short.MAX_VALUE)
-                .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(28, 28, 28))
+                .addGap(30, 30, 30)
+                .addComponent(diametreJLabel)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(diametreJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(7, Short.MAX_VALUE))
         );
 
         choixRightPanel.add(jMenuBarFonctions);
@@ -292,9 +296,9 @@ public class MainWindowDesign extends javax.swing.JFrame {
         // TODO add your handling code here:
     }//GEN-LAST:event_modelisationTypesBoxActionPerformed
 
-    private void ajoutMeubleSDButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ajoutMeubleSDButtonActionPerformed
+    private void ajoutMeubleButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ajoutMeubleButtonActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_ajoutMeubleSDButtonActionPerformed
+    }//GEN-LAST:event_ajoutMeubleButtonActionPerformed
 
     private void longeurJTextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_longeurJTextActionPerformed
         // TODO add your handling code here:
@@ -319,6 +323,14 @@ public class MainWindowDesign extends javax.swing.JFrame {
         positionXJText.setText(Integer.toString(p.x));
         positionYJText.setText(Integer.toString(p.y));
     }//GEN-LAST:event_drawingCenterPanelMouseEntered
+
+    private void drawingCenterPanelMouseWheelMoved(java.awt.event.MouseWheelEvent evt) {//GEN-FIRST:event_drawingCenterPanelMouseWheelMoved
+        // TODO add your handling code here:
+    }//GEN-LAST:event_drawingCenterPanelMouseWheelMoved
+
+    private void diametreJTextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_diametreJTextActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_diametreJTextActionPerformed
 
     /**
      * @param args the command line arguments
@@ -348,15 +360,16 @@ public class MainWindowDesign extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel InformationZoneBottomPanel;
     private javax.swing.JMenu aideMenu;
-    private javax.swing.JButton ajoutMeubleSDButton;
+    private javax.swing.JButton ajoutMeubleButton;
     private javax.swing.JPanel buttonTopPanel;
     private javax.swing.JPanel choixRightPanel;
+    private javax.swing.JLabel diametreJLabel;
+    private javax.swing.JTextField diametreJText;
     private javax.swing.JPanel drawingCenterPanel;
     private javax.swing.JMenu editionMenu;
     private javax.swing.JMenuItem exporterItem;
     private javax.swing.JMenu fichierMenu;
     private javax.swing.JMenuItem importerItem;
-    private javax.swing.JComboBox<String> jComboBox1;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
     private javax.swing.JMenu jMenu3;
@@ -367,7 +380,7 @@ public class MainWindowDesign extends javax.swing.JFrame {
     private javax.swing.JLabel longueurJLabel;
     private javax.swing.JMenuBar mainMenuBar;
     private javax.swing.JPanel mainPanel;
-    private javax.swing.JComboBox<String> meubleSansDrainBox;
+    private javax.swing.JComboBox<String> meubleBox;
     private javax.swing.JComboBox<String> modelisationTypesBox;
     private javax.swing.JButton modifierMeuble;
     private javax.swing.JMenu nouvelleModelisationMenu;

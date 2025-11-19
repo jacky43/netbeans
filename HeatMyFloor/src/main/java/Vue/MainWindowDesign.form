@@ -171,20 +171,24 @@
                 <Property name="text" type="java.lang.String" value="Redo"/>
               </Properties>
             </Component>
-            <Component class="javax.swing.JButton" name="ajoutMeubleSDButton">
+            <Component class="javax.swing.JButton" name="ajoutMeubleButton">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Ajouter Meuble sans drain"/>
+                <Property name="text" type="java.lang.String" value="Ajouter Meuble "/>
               </Properties>
               <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="ajoutMeubleSDButtonActionPerformed"/>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="ajoutMeubleButtonActionPerformed"/>
               </Events>
             </Component>
-            <Component class="javax.swing.JComboBox" name="meubleSansDrainBox">
+            <Component class="javax.swing.JComboBox" name="meubleBox">
               <Properties>
                 <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
-                  <StringArray count="2">
+                  <StringArray count="6">
                     <StringItem index="0" value="ARMOIRE"/>
-                    <StringItem index="1" value="PLACARD"/>
+                    <StringItem index="1" value="BAIN"/>
+                    <StringItem index="2" value="DOUCHE"/>
+                    <StringItem index="3" value="PLACARD"/>
+                    <StringItem index="4" value="TOILETTE"/>
+                    <StringItem index="5" value="VANITE"/>
                   </StringArray>
                 </Property>
               </Properties>
@@ -236,6 +240,7 @@
             </Property>
           </Properties>
           <Events>
+            <EventHandler event="mouseWheelMoved" listener="java.awt.event.MouseWheelListener" parameters="java.awt.event.MouseWheelEvent" handler="drawingCenterPanelMouseWheelMoved"/>
             <EventHandler event="mouseClicked" listener="java.awt.event.MouseListener" parameters="java.awt.event.MouseEvent" handler="drawingCenterPanelMouseClicked"/>
             <EventHandler event="mouseEntered" listener="java.awt.event.MouseListener" parameters="java.awt.event.MouseEvent" handler="drawingCenterPanelMouseEntered"/>
           </Events>
@@ -277,36 +282,18 @@
             <DimensionLayout dim="0">
               <Group type="103" groupAlignment="0" attributes="0">
                   <Group type="102" alignment="0" attributes="0">
-                      <Group type="103" groupAlignment="0" attributes="0">
-                          <Group type="102" alignment="0" attributes="0">
-                              <EmptySpace min="-2" pref="37" max="-2" attributes="0"/>
-                              <Component id="longueurJLabel" min="-2" max="-2" attributes="0"/>
-                          </Group>
-                          <Group type="102" alignment="0" attributes="0">
-                              <EmptySpace min="-2" pref="42" max="-2" attributes="0"/>
-                              <Component id="largeurJLabel" min="-2" max="-2" attributes="0"/>
-                          </Group>
-                          <Group type="102" alignment="0" attributes="0">
-                              <EmptySpace min="-2" pref="29" max="-2" attributes="0"/>
-                              <Group type="103" groupAlignment="0" attributes="0">
-                                  <Component id="jComboBox1" min="-2" max="-2" attributes="0"/>
-                                  <Group type="103" groupAlignment="0" attributes="0">
-                                      <Component id="positionYJText" alignment="1" min="-2" pref="100" max="-2" attributes="0"/>
-                                      <Group type="103" groupAlignment="0" max="-2" attributes="0">
-                                          <Component id="largeurJText" max="32767" attributes="0"/>
-                                          <Group type="102" attributes="0">
-                                              <EmptySpace min="9" pref="9" max="-2" attributes="0"/>
-                                              <Group type="103" groupAlignment="0" attributes="0">
-                                                  <Component id="positionYJLabel" alignment="0" min="-2" max="-2" attributes="0"/>
-                                                  <Component id="positionXJLabel" alignment="0" min="-2" max="-2" attributes="0"/>
-                                              </Group>
-                                          </Group>
-                                          <Component id="longeurJText" alignment="0" max="32767" attributes="0"/>
-                                          <Component id="positionXJText" alignment="1" pref="0" max="32767" attributes="0"/>
-                                      </Group>
-                                  </Group>
-                              </Group>
-                          </Group>
+                      <EmptySpace min="-2" pref="29" max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                          <Component id="longueurJLabel" min="-2" max="-2" attributes="0"/>
+                          <Component id="diametreJLabel" min="-2" max="-2" attributes="0"/>
+                          <Component id="positionYJText" alignment="0" max="32767" attributes="0"/>
+                          <Component id="positionXJLabel" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <Component id="largeurJLabel" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <Component id="positionXJText" alignment="0" max="32767" attributes="0"/>
+                          <Component id="largeurJText" alignment="0" max="32767" attributes="0"/>
+                          <Component id="longeurJText" alignment="0" max="32767" attributes="0"/>
+                          <Component id="positionYJLabel" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <Component id="diametreJText" alignment="0" max="32767" attributes="0"/>
                       </Group>
                       <EmptySpace pref="21" max="32767" attributes="0"/>
                   </Group>
@@ -331,9 +318,11 @@
                       <Component id="positionYJLabel" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="positionYJText" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace pref="40" max="32767" attributes="0"/>
-                      <Component id="jComboBox1" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace min="-2" pref="28" max="-2" attributes="0"/>
+                      <EmptySpace min="-2" pref="30" max="-2" attributes="0"/>
+                      <Component id="diametreJLabel" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Component id="diametreJText" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace pref="7" max="32767" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
@@ -375,18 +364,15 @@
                 <Property name="text" type="java.lang.String" value="Position Y"/>
               </Properties>
             </Component>
-            <Component class="javax.swing.JComboBox" name="jComboBox1">
+            <Component class="javax.swing.JTextField" name="diametreJText">
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="diametreJTextActionPerformed"/>
+              </Events>
+            </Component>
+            <Component class="javax.swing.JLabel" name="diametreJLabel">
               <Properties>
-                <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
-                  <StringArray count="2">
-                    <StringItem index="0" value="Bonbon"/>
-                    <StringItem index="1" value="biscuits"/>
-                  </StringArray>
-                </Property>
+                <Property name="text" type="java.lang.String" value="Diam&#xe8;tre drain"/>
               </Properties>
-              <AuxValues>
-                <AuxValue name="JavaCodeGenerator_TypeParameters" type="java.lang.String" value="&lt;String&gt;"/>
-              </AuxValues>
             </Component>
           </SubComponents>
         </Container>
