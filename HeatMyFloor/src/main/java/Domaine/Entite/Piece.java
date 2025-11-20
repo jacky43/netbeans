@@ -2,6 +2,7 @@ package Domaine.Entite;
 
 
 import Domaine.DTO.MeubleDTO;
+import Domaine.DTO.ElementChauffantDTO;
 import java.awt.Point;
 import java.awt.Polygon;
 import java.util.ArrayList;
@@ -133,5 +134,19 @@ public class Piece {
     {
         Point position = getPositionPiece();
         return new Point(position.x, position.y + (int)forme.getBounds().getHeight());
+    }
+    
+    public boolean AjouterElementChauffant(ElementChauffantDTO dto)
+    {
+        
+        return true;
+    }
+    
+    public boolean VerifierAdjacentMur(ElementChauffantDTO dto)
+    {
+//        vérifie si deux point de element sont sur une des lignes de mur de la piece
+        
+        
+        return true;
     }
 }

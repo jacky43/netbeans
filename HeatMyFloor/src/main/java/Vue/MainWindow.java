@@ -55,8 +55,16 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JComboBox<String> meubleSansDrainBox;
     private javax.swing.JLabel diametreJLabel;
     private javax.swing.JTextField diametreJText;
-    private static int DIAMETRE_DRAIN_PIXELS = 10;
-
+    private javax.swing.JLabel largeurPieceJLabel;
+    private javax.swing.JTextField largeurPieceJText;
+    private javax.swing.JLabel longueurPieceJLabel;
+    private javax.swing.JTextField longueurPieceJText;
+    private javax.swing.JButton nouvellePieceJButton;
+    private javax.swing.JLabel titrePieceJLabel;
+    private javax.swing.JComboBox<String> typePieceComboBox;
+    private javax.swing.JLabel typePieceJLabel;
+    
+    private final int DIAMETRE_DRAIN_PIXELS = 10;
     private final int LONGUEUR_INITIALE_MEUBLE = 1;
     private final int LARGEUR_INITIALE_MEUBLE = 1;
 
@@ -72,10 +80,6 @@ public class MainWindow extends javax.swing.JFrame {
 
     // Position de la dernière souris pour le zoom
     private Point lastMousePosition = null;
-
-    private void diametreJTextActionPerformed(java.awt.event.ActionEvent evt) {
-
-    }
 
     public HeatMyFloorController controller;
     public DrawingPanel drawingPanel;
@@ -132,6 +136,14 @@ public class MainWindow extends javax.swing.JFrame {
         zoomLabel = new javax.swing.JLabel();
         diametreJText = new javax.swing.JTextField();
         diametreJLabel = new javax.swing.JLabel();
+        longueurPieceJText = new javax.swing.JTextField();
+        largeurPieceJText = new javax.swing.JTextField();
+        longueurPieceJLabel = new javax.swing.JLabel();
+        largeurPieceJLabel = new javax.swing.JLabel();
+        titrePieceJLabel = new javax.swing.JLabel();
+        nouvellePieceJButton = new javax.swing.JButton();
+        typePieceJLabel = new javax.swing.JLabel();
+        typePieceComboBox = new javax.swing.JComboBox<>();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -204,15 +216,8 @@ public class MainWindow extends javax.swing.JFrame {
         buttonTopPanel.add(modifierMeubleButton);
 
         diametreJText.setPreferredSize(new java.awt.Dimension(100, 22));
-        diametreJText.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                diametreJTextActionPerformed(evt);
-            }
-        });
         diametreJLabel.setText("Diamètre drain");
-
         mainPanel.add(buttonTopPanel, java.awt.BorderLayout.NORTH);
-
         InformationZoneBottomPanel.setPreferredSize(new java.awt.Dimension(1000, 100));
 
         javax.swing.GroupLayout InformationZoneBottomPanelLayout = new javax.swing.GroupLayout(InformationZoneBottomPanel);
@@ -248,7 +253,8 @@ public class MainWindow extends javax.swing.JFrame {
                 drawingPanelMouseWheelMoved(evt);
             }
         });
-
+        
+        // Coté gauche
         longueurJLabel.setText("Longueur");
         largeurJLabel.setText("Largeur");
         positionXJLabel.setText("Position X");
@@ -329,20 +335,62 @@ public class MainWindow extends javax.swing.JFrame {
         drawingCenterPanel.add(drawingPanel, java.awt.BorderLayout.CENTER);
         mainPanel.add(drawingCenterPanel, java.awt.BorderLayout.CENTER);
 
-        choixRightPanel = new javax.swing.JPanel();
+        
         choixRightPanel.setPreferredSize(new java.awt.Dimension(150, 350));
         choixRightPanel.setBackground(java.awt.Color.WHITE);
         choixRightPanel.setBorder(javax.swing.BorderFactory.createLineBorder(java.awt.Color.LIGHT_GRAY, 1));
+        
+        // Coté droit
+        choixRightPanel.setPreferredSize(new java.awt.Dimension(150, 350));
+        longueurPieceJLabel.setText("Longueur");
+        largeurPieceJLabel.setText("Largeur");
+        titrePieceJLabel.setText("Pièce ");
+        nouvellePieceJButton.setText("Nouvelle piece");
+        typePieceJLabel.setText("Type");
+        typePieceComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Regulière", "Irrégulière" }));
+        longueurPieceJText.setPreferredSize(new java.awt.Dimension(100, 22));
+        largeurPieceJText.setPreferredSize(new java.awt.Dimension(100, 22));
 
         javax.swing.GroupLayout choixRightPanelLayout = new javax.swing.GroupLayout(choixRightPanel);
-        choixRightPanel.setLayout(choixRightPanelLayout);
+
         choixRightPanelLayout.setHorizontalGroup(
-                choixRightPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGap(0, 150, Short.MAX_VALUE)
+            choixRightPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(choixRightPanelLayout.createSequentialGroup()
+                .addGroup(choixRightPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(choixRightPanelLayout.createSequentialGroup()
+                        .addGap(21, 21, 21)
+                        .addGroup(choixRightPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(titrePieceJLabel)))
+                            .addComponent(typePieceJLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(typePieceComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(longueurPieceJLabel)
+                            .addComponent(longueurPieceJText, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(largeurPieceJLabel)))
+                            .addComponent(largeurPieceJText, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(nouvellePieceJButton)
+                    .addGroup(choixRightPanelLayout.createSequentialGroup()
+                        .addGap(51, 51, 51)
+                .addContainerGap(21, Short.MAX_VALUE))
         );
         choixRightPanelLayout.setVerticalGroup(
-                choixRightPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGap(0, 350, Short.MAX_VALUE)
+            choixRightPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(choixRightPanelLayout.createSequentialGroup()
+                .addComponent(titrePieceJLabel)
+                .addGap(24, 24, 24)
+                .addComponent(typePieceJLabel)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(typePieceComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(24, 24, 24)
+                .addComponent(longueurPieceJLabel)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(longueurPieceJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(24, 24, 24)
+                .addComponent(largeurPieceJLabel)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(largeurPieceJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(12, 12, 12)
+                .addComponent(nouvellePieceJButton)
+                .addContainerGap(137, Short.MAX_VALUE))
         );
 
         mainPanel.add(choixRightPanel, java.awt.BorderLayout.EAST);
