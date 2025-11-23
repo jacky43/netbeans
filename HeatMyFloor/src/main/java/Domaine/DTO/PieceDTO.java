@@ -1,5 +1,7 @@
 package Domaine.DTO;
 
+import Domaine.Entite.ElementChauffant;
+import Domaine.Entite.ElementSelectionnable;
 import Domaine.Entite.Meuble;
 import Domaine.Entite.Piece;
 import java.awt.Polygon;
@@ -20,13 +22,15 @@ public class PieceDTO {
     public PieceDTO(Piece p_piece) {
         forme = p_piece.getForme();
         meubles = new ArrayList<>();
-        for (Meuble meuble : p_piece.getMeubles()) {
-            if (meuble instanceof MeubleAvecDrain meubleAvecDrain) {
+        for (ElementSelectionnable element: p_piece.getElements()) {
+            if (element instanceof MeubleAvecDrain meubleAvecDrain) {
                 meubles.add(new MeubleDTO(meubleAvecDrain));
-            } else if (meuble instanceof MeubleSansDrain meubleSansDrain) {
+            } else if (element instanceof MeubleSansDrain meubleSansDrain) {
                 meubles.add(new MeubleDTO(meubleSansDrain));
-            } else {
+            } else if (element instanceof Meuble meuble) {
                 meubles.add(new MeubleDTO(meuble));
+            }else if (element instanceof ElementChauffant elementChauffant) {
+                meubles.add(new MeubleDTO(elementChauffant.getPosition(), elementChauffant.getLongueur(), elementChauffant.getLargeur(), "ELEMENT_CHAUFFANT"));
             }
         }
     }

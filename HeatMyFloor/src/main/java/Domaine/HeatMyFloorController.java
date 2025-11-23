@@ -1,7 +1,9 @@
 package Domaine;
 
+import Domaine.DTO.ElementChauffantDTO;
 import Domaine.DTO.MeubleDTO;
 import Domaine.DTO.PieceDTO;
+import Domaine.Entite.ElementChauffant;
 import Domaine.Entite.Meuble;
 import Domaine.Entite.Piece;
 import java.awt.Point;
@@ -40,12 +42,25 @@ public class HeatMyFloorController {
     {
         maPiece.AjouterMeuble(dto);
     }
+    
+     public void AjouterElementChauffant(ElementChauffantDTO dto)
+    {
+        maPiece.AjouterElementChauffant(dto);
+    }
             
     public ArrayList<MeubleDTO> ObtenirMeubles()
     {
         ArrayList<MeubleDTO> dtos = new ArrayList<>();
         for (Meuble meuble : maPiece.getMeubles())
-            dtos.add(construireMeubleDto(meuble));
+            dtos.add((MeubleDTO)construireDto(meuble));
+        return dtos;
+    }
+    
+     public ArrayList<Object> ObtenirTousLesElements()
+    {
+        ArrayList<Object> dtos = new ArrayList<>();
+        for (ElementSelectionnable element : maPiece.getMeubles())
+            dtos.add((MeubleDTO)construireDto(element));
         return dtos;
     }
     
@@ -59,26 +74,41 @@ public class HeatMyFloorController {
         return maPiece.getPositionPiece();
     }
     
-    public MeubleDTO SelectionnerElement(Point position)
+    public Object SelectionnerElement(Point position)
     {
         ElementSelectionnable elementSelectionne = maPiece.SelectionnerElement(position);
-        return construireMeubleDto(elementSelectionne);
+        return construireDto(elementSelectionne);
     }
     
-    public boolean ModifierMeubleSelectionne(Point nouvellePosition, int nouvelleLargeur, int nouvelleLongueur) 
+    public boolean ModifierElementSelectionne(Point nouvellePosition, Integer nouvelleLargeur, Integer nouvelleLongueur) 
     {  
-        return maPiece.ModifierMeubleSelectionne(nouvellePosition, nouvelleLargeur, nouvelleLongueur);
+        ElementSelectionnable element = maPiece.ObtenirElementSelectionne();
+        if(element instanceof ElementChauffant){
+            if(nouvelleLargeur != null){
+                element.setLargeur(nouvelleLargeur);
+            }
+            if(nouvelleLongueur != null){
+                element.setLongueur(nouvelleLongueur);
+            }
+            if(nouvellePosition != null){
+                nouvellePosition = maPiece.TrouverPositionSurMurLePlusProche(nouvellePosition, element.getLargeur(), element.getLongueur());
+                element.setPosition(nouvellePosition);
+            }
+            return true;
+            
+        }
+        return maPiece.ModifierElementSelectionne(nouvellePosition, nouvelleLargeur, nouvelleLongueur);
     }
     
-     public boolean SupprimerMeubleSelectionne()
+     public boolean SupprimerElementSelectionne()
     {
-        return maPiece.SupprimerMeubleSelectionne();
+        return maPiece.SupprimerElementSelectionne();
     }
     
-    public MeubleDTO ObtenirmeubleSelectionne()
+    public Object ObtenirElementSelectionne()
     {
         ElementSelectionnable element = maPiece.ObtenirElementSelectionne();
-        return construireMeubleDto(element);
+        return construireDto(element);
     }
     
      // TODO : 
@@ -87,15 +117,18 @@ public class HeatMyFloorController {
        
     }
     
-    private MeubleDTO construireMeubleDto(ElementSelectionnable element)
+    private Object construireDto(ElementSelectionnable element)
     {
         if (element == null)
             return null;
+       /** Object dto = element.ToDto();
+        if(dto instanceof MeubleDTO meubleDto)
+            return meubleDto;
         
-        if(element instanceof Meuble meuble)
-            return meuble.ToDto();
-        
-        return null;
+        if(dto instanceof ElementChauffantDTO elementChauffantDto){
+            return new  ElementChauffantDTO(elementChauffantDto.getPosition(), elementChauffantDto.getLongueur(), elementChauffantDto.getLargeur());
+        }**/
+        return element.ToDto();
     }
     
     public Point ObtenirOrigine()

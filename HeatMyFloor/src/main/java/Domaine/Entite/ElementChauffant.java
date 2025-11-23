@@ -5,7 +5,7 @@ import Domaine.DTO.ElementChauffantDTO;
 import java.awt.Point;
 import java.util.UUID;
 
-public abstract class ElementChauffant implements ElementSelectionnable {
+public class ElementChauffant implements ElementSelectionnable {
     private Point position;
     private int longueur;
     private int largeur;
@@ -79,5 +79,10 @@ public abstract class ElementChauffant implements ElementSelectionnable {
     public void setSelectionne(boolean selectionne)
     {
         estSelectionne = selectionne;
+    }
+
+    @Override
+    public Object ToDto() {
+        return new ElementChauffantDTO(getPosition(), getLongueur(), getLargeur());
     }
 }

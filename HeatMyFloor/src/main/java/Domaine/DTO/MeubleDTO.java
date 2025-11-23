@@ -6,7 +6,7 @@ import Domaine.Entite.MeubleSansDrain;
 import java.awt.Point;
 import java.util.UUID;
 
-public class MeubleDTO {
+public class MeubleDTO implements ElementSelectionnableDTO {
 
     private Point position;
     private int longueur;
@@ -70,14 +70,17 @@ public class MeubleDTO {
         return centreDrain != null;
     }
 
+    @Override
     public Point getPosition() {
         return new Point(position);
     }
 
+    @Override
     public int getLongueur() {
         return longueur;
     }
-
+    
+    @Override
     public int getLargeur() {
         return largeur;
     }
@@ -86,6 +89,7 @@ public class MeubleDTO {
         return centreDrain == null ? null : new Point(centreDrain);
     }
 
+    @Override
     public boolean estSelectionne() {
         return estSelectionne;
     }
@@ -94,6 +98,7 @@ public class MeubleDTO {
         return nom;
     }
 
+    @Override
     public UUID getId() {
         return id;
     }

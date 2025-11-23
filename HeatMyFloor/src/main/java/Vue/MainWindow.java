@@ -1,6 +1,9 @@
 package Vue;
 
+import Domaine.DTO.ElementChauffantDTO;
+import Domaine.DTO.ElementSelectionnableDTO;
 import Domaine.DTO.MeubleDTO;
+import Domaine.Entite.ElementSelectionnable;
 import Domaine.HeatMyFloorController;
 import java.awt.Point;
 import java.awt.Toolkit;
@@ -28,9 +31,17 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JMenu fichierMenu;
     private javax.swing.JMenuItem importerItem;
     private javax.swing.JLabel largeurJLabel;
-    private javax.swing.JTextField largeurJText;
-    private javax.swing.JTextField longueurJText;
+    private javax.swing.JTextField largeurPiedJText;
+    private javax.swing.JTextField largeurPouceJText;
+    private javax.swing.JTextField largeurFractionJText;
+    private javax.swing.JTextField longueurPiedsJText;
+    private javax.swing.JTextField longueurPouceJText;
+    private javax.swing.JTextField longueurFractionJText;
     private javax.swing.JLabel longueurJLabel;
+    private javax.swing.JLabel LongueurPouceJLabel;
+    private javax.swing.JLabel LongueurPiedsJLabel;
+    private javax.swing.JLabel LargeurPouceJLabel;
+    private javax.swing.JLabel LargeurPiedsJLabel;
     private javax.swing.JMenuBar mainMenuBar;
     private javax.swing.JPanel mainPanel;
     private javax.swing.JComboBox<String> modelisationTypesBox;
@@ -39,12 +50,17 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JMenuItem pieceIrreguliereItem;
     private javax.swing.JMenuItem pieceReguliereItem;
     private javax.swing.JLabel positionXJLabel;
-    private javax.swing.JTextField positionXJText;
+    private javax.swing.JLabel positionPiedXJLabel;
+    private javax.swing.JLabel positionPouceXJLabel;
+    private javax.swing.JTextField positionPiedXJText;
+    private javax.swing.JTextField positionPouceXJText;
     private javax.swing.JLabel positionYJLabel;
-    private javax.swing.JTextField positionYJText;
+    private javax.swing.JTextField positionPiedYJText;
+    private javax.swing.JTextField positionPouceYJText;
     private javax.swing.JButton redoButton;
     private javax.swing.JMenuItem sauvegarderItem;
     private javax.swing.JButton ajoutMeubleSDButton;
+    private javax.swing.JButton ajoutElementChauffantButton;
     private javax.swing.JButton supprimerMeubleButton;
     private javax.swing.JButton modifierMeubleButton;
     private javax.swing.JButton undoButton;
@@ -55,14 +71,14 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JComboBox<String> meubleSansDrainBox;
     private javax.swing.JLabel diametreJLabel;
     private javax.swing.JTextField diametreJText;
-    private javax.swing.JLabel largeurPieceJLabel;
     private javax.swing.JTextField largeurPieceJText;
-    private javax.swing.JLabel longueurPieceJLabel;
     private javax.swing.JTextField longueurPieceJText;
-    private javax.swing.JButton nouvellePieceJButton;
+    private javax.swing.JLabel longueurPieceJLabel;
+    private javax.swing.JLabel largeurPieceJLabel;
     private javax.swing.JLabel titrePieceJLabel;
-    private javax.swing.JComboBox<String> typePieceComboBox;
+    private javax.swing.JButton nouvellePieceJButton;
     private javax.swing.JLabel typePieceJLabel;
+    private javax.swing.JComboBox<String> typePieceComboBox;
     
     private final int DIAMETRE_DRAIN_PIXELS = 10;
     private final int LONGUEUR_INITIALE_MEUBLE = 1;
@@ -71,8 +87,7 @@ public class MainWindow extends javax.swing.JFrame {
     // Variables pour le zoom
     private double zoomFactor = 1.0;
     private final double ZOOM_INCREMENT = 0.1;
-    private final double MIN_ZOOM = 0.1;
-    private final double MAX_ZOOM = 5.0;
+    
 
     // Offset pour le zoom centré sur la souris
     private double panOffsetX = 0;
@@ -119,14 +134,25 @@ public class MainWindow extends javax.swing.JFrame {
         outilsMenu1 = new javax.swing.JMenu();
         aideMenu = new javax.swing.JMenu();
         ajoutMeubleSDButton = new javax.swing.JButton();
+        ajoutElementChauffantButton = new javax.swing.JButton();
         supprimerMeubleButton = new javax.swing.JButton();
         modifierMeubleButton = new javax.swing.JButton();
-        longueurJText = new javax.swing.JTextField();
-        largeurJText = new javax.swing.JTextField();
-        positionXJText = new javax.swing.JTextField();
-        positionYJText = new javax.swing.JTextField();
+        longueurPiedsJText = new javax.swing.JTextField();
+        longueurPouceJText = new javax.swing.JTextField();
+        longueurFractionJText = new javax.swing.JTextField();
+        largeurPiedJText = new javax.swing.JTextField();
+        largeurPouceJText = new javax.swing.JTextField();
+        largeurFractionJText = new javax.swing.JTextField();
+        positionPiedXJText = new javax.swing.JTextField();
+        positionPouceXJText = new javax.swing.JTextField();
+        positionPiedYJText = new javax.swing.JTextField();
+        positionPouceYJText = new javax.swing.JTextField();
         longueurJLabel = new javax.swing.JLabel();
+        LongueurPouceJLabel = new javax.swing.JLabel();
+        LargeurPouceJLabel = new javax.swing.JLabel();
         largeurJLabel = new javax.swing.JLabel();
+        LongueurPiedsJLabel = new javax.swing.JLabel();
+        LargeurPiedsJLabel = new javax.swing.JLabel();
         positionXJLabel = new javax.swing.JLabel();
         positionYJLabel = new javax.swing.JLabel();
         meubleSansDrainBox = new javax.swing.JComboBox<>();
@@ -165,26 +191,20 @@ public class MainWindow extends javax.swing.JFrame {
 
         // Boutons de zoom
         zoomInButton.setText("Zoom +");
-        zoomInButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                zoomInButtonActionPerformed(evt);
-            }
+        zoomInButton.addActionListener((java.awt.event.ActionEvent evt) -> {
+            zoomInButtonActionPerformed(evt);
         });
         buttonTopPanel.add(zoomInButton);
 
         zoomOutButton.setText("Zoom -");
-        zoomOutButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                zoomOutButtonActionPerformed(evt);
-            }
+        zoomOutButton.addActionListener((java.awt.event.ActionEvent evt) -> {
+            zoomOutButtonActionPerformed(evt);
         });
         buttonTopPanel.add(zoomOutButton);
 
         zoomResetButton.setText("Zoom 100%");
-        zoomResetButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                zoomResetButtonActionPerformed(evt);
-            }
+        zoomResetButton.addActionListener((java.awt.event.ActionEvent evt) -> {
+            zoomResetButtonActionPerformed(evt);
         });
         buttonTopPanel.add(zoomResetButton);
 
@@ -192,26 +212,26 @@ public class MainWindow extends javax.swing.JFrame {
         buttonTopPanel.add(zoomLabel);
 
         ajoutMeubleSDButton.setText("Ajouter Meuble");
-        ajoutMeubleSDButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                ajoutMeubleSDButtonActionPerformed(evt);
-            }
+        ajoutMeubleSDButton.addActionListener((java.awt.event.ActionEvent evt) -> {
+            ajoutMeubleSDButtonActionPerformed(evt);
         });
         buttonTopPanel.add(ajoutMeubleSDButton);
+        
+        ajoutElementChauffantButton.setText("Ajouter Element Chauffant");
+        ajoutElementChauffantButton.addActionListener((java.awt.event.ActionEvent evt) -> {
+            ajoutElementChauffantButtonActionPerformed(evt);
+        });
+        buttonTopPanel.add(ajoutElementChauffantButton);
 
-        supprimerMeubleButton.setText("Supprimer meuble");
-        supprimerMeubleButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                supprimerMeubleButtonActionPerformed(evt);
-            }
+        supprimerMeubleButton.setText("Supprimer élément sélectionné");
+        supprimerMeubleButton.addActionListener((java.awt.event.ActionEvent evt) -> {
+            supprimerMeubleButtonActionPerformed(evt);
         });
         buttonTopPanel.add(supprimerMeubleButton);
 
-        modifierMeubleButton.setText("Modifier meuble");
-        modifierMeubleButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                modifierMeubleButtonActionPerformed(evt);
-            }
+        modifierMeubleButton.setText("Modifier élément sélectionné");
+        modifierMeubleButton.addActionListener((java.awt.event.ActionEvent evt) -> {
+            modifierElementButtonActionPerformed(evt);
         });
         buttonTopPanel.add(modifierMeubleButton);
 
@@ -248,83 +268,146 @@ public class MainWindow extends javax.swing.JFrame {
             }
         });
 
-        drawingPanel.addMouseWheelListener(new java.awt.event.MouseWheelListener() {
-            public void mouseWheelMoved(java.awt.event.MouseWheelEvent evt) {
-                drawingPanelMouseWheelMoved(evt);
-            }
+        drawingPanel.addMouseWheelListener((java.awt.event.MouseWheelEvent evt) -> {
+            drawingPanelMouseWheelMoved(evt);
         });
         
         // Coté gauche
         longueurJLabel.setText("Longueur");
+        LongueurPiedsJLabel.setText("ft");
+        LongueurPouceJLabel.setText("in");
+         LargeurPiedsJLabel.setText("ft");
+        LargeurPouceJLabel.setText("in");
         largeurJLabel.setText("Largeur");
         positionXJLabel.setText("Position X");
         positionYJLabel.setText("Position Y");
-        positionXJText.setPreferredSize(new java.awt.Dimension(100, 22));
-        positionYJText.setPreferredSize(new java.awt.Dimension(100, 22));
-        longueurJText.setPreferredSize(new java.awt.Dimension(100, 22));
-        largeurJText.setPreferredSize(new java.awt.Dimension(100, 22));
-
+        positionPiedXJText.setPreferredSize(new java.awt.Dimension(25, 22));
+        positionPiedYJText.setPreferredSize(new java.awt.Dimension(25, 22));
+        longueurPiedsJText.setPreferredSize(new java.awt.Dimension(25, 22));
+        longueurPouceJText.setPreferredSize(new java.awt.Dimension(25, 22));
+        largeurPiedJText.setPreferredSize(new java.awt.Dimension(25, 22));
+        largeurPouceJText.setPreferredSize(new java.awt.Dimension(25, 22));
+        
         choixLeftPanel = new javax.swing.JPanel();
         choixLeftPanel.setPreferredSize(new java.awt.Dimension(150, 350));
         choixLeftPanel.setBackground(java.awt.Color.WHITE);
         choixLeftPanel.setBorder(javax.swing.BorderFactory.createLineBorder(java.awt.Color.LIGHT_GRAY, 1));
 
         javax.swing.GroupLayout choixLeftPanelLayout = new javax.swing.GroupLayout(choixLeftPanel);
-        choixLeftPanel.setLayout(choixLeftPanelLayout);
-        choixLeftPanelLayout.setHorizontalGroup(
-                choixLeftPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(choixLeftPanelLayout.createSequentialGroup()
-                                .addGroup(choixLeftPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                        .addGroup(choixLeftPanelLayout.createSequentialGroup()
-                                                .addGap(29, 29, 29)
-                                                .addGroup(choixLeftPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                                        .addComponent(positionYJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                        .addComponent(positionXJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                        .addComponent(largeurJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                        .addComponent(longueurJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                        .addComponent(diametreJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                        .addGroup(choixLeftPanelLayout.createSequentialGroup()
-                                                                .addGap(9, 9, 9)
-                                                                .addGroup(choixLeftPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                                                        .addComponent(positionYJLabel)
-                                                                        .addComponent(positionXJLabel)))))
-                                        .addGroup(choixLeftPanelLayout.createSequentialGroup()
-                                                .addGap(37, 37, 37)
-                                                .addComponent(longueurJLabel))
-                                        .addGroup(choixLeftPanelLayout.createSequentialGroup()
-                                                .addGap(42, 42, 42)
-                                                .addComponent(largeurJLabel))
-                                        .addGroup(choixLeftPanelLayout.createSequentialGroup()
-                                                .addGap(29, 29, 29)
-                                                .addComponent(diametreJLabel)))
-                                .addContainerGap(57, Short.MAX_VALUE))
-        );
+       choixLeftPanel.setLayout(choixLeftPanelLayout);
 
-        choixLeftPanelLayout.setVerticalGroup(
-                choixLeftPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(choixLeftPanelLayout.createSequentialGroup()
-                                .addGap(12, 12, 12)
-                                .addComponent(longueurJLabel)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(longueurJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(24, 24, 24)
-                                .addComponent(largeurJLabel)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(largeurJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(24, 24, 24)
-                                .addComponent(positionXJLabel)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(positionXJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(24, 24, 24)
-                                .addComponent(positionYJLabel)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(positionYJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(24, 24, 24)
-                                .addComponent(diametreJLabel)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(diametreJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addContainerGap(26, Short.MAX_VALUE))
-        );
+choixLeftPanelLayout.setHorizontalGroup(
+    choixLeftPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+        .addGroup(choixLeftPanelLayout.createSequentialGroup()
+            .addGap(29, 29, 29)
+            .addGroup(choixLeftPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+
+                // ----- LONGUEUR -----
+                .addComponent(longueurJLabel)
+
+                .addGroup(choixLeftPanelLayout.createSequentialGroup()
+                    .addComponent(longueurPiedsJText, javax.swing.GroupLayout.PREFERRED_SIZE,
+                            javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                    .addComponent(LongueurPiedsJLabel)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                    .addComponent(longueurPouceJText, javax.swing.GroupLayout.PREFERRED_SIZE,
+                            javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(LongueurPouceJLabel)
+                )
+
+                // ----- LARGEUR -----
+                .addComponent(largeurJLabel)
+
+                .addGroup(choixLeftPanelLayout.createSequentialGroup()
+                    .addComponent(largeurPiedJText, javax.swing.GroupLayout.PREFERRED_SIZE,
+                            javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                    .addComponent(LargeurPiedsJLabel)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                    .addComponent(largeurPouceJText, javax.swing.GroupLayout.PREFERRED_SIZE,
+                            javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(LargeurPouceJLabel)
+                )
+
+                // ----- POSITION X -----
+                .addComponent(positionXJLabel)
+                .addComponent(positionPiedXJText, javax.swing.GroupLayout.PREFERRED_SIZE,
+                        javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+
+                // ----- POSITION Y -----
+                .addComponent(positionYJLabel)
+                .addComponent(positionPiedYJText, javax.swing.GroupLayout.PREFERRED_SIZE,
+                        javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+
+                // ----- DIAMETRE -----
+                .addComponent(diametreJLabel)
+                .addComponent(diametreJText, javax.swing.GroupLayout.PREFERRED_SIZE,
+                        javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+            )
+            .addContainerGap(57, Short.MAX_VALUE))
+);
+
+
+choixLeftPanelLayout.setVerticalGroup(
+    choixLeftPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+        .addGroup(choixLeftPanelLayout.createSequentialGroup()
+            .addGap(12, 12, 12)
+
+            // ----- LONGUEUR -----
+            .addComponent(longueurJLabel)
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+
+            .addGroup(choixLeftPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addComponent(longueurPiedsJText, javax.swing.GroupLayout.PREFERRED_SIZE,
+                        javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(LongueurPiedsJLabel)
+                .addComponent(longueurPouceJText, javax.swing.GroupLayout.PREFERRED_SIZE,
+                        javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(LongueurPouceJLabel)
+            )
+
+            .addGap(24, 24, 24)
+
+            // ----- LARGEUR -----
+            .addComponent(largeurJLabel)
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+
+            .addGroup(choixLeftPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addComponent(largeurPiedJText, javax.swing.GroupLayout.PREFERRED_SIZE,
+                        javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(LargeurPiedsJLabel)
+                .addComponent(largeurPouceJText, javax.swing.GroupLayout.PREFERRED_SIZE,
+                        javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(LargeurPouceJLabel)
+            )
+
+            .addGap(24, 24, 24)
+
+            // ----- POSITION X -----
+            .addComponent(positionXJLabel)
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+            .addComponent(positionPiedXJText, javax.swing.GroupLayout.PREFERRED_SIZE,
+                    javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+
+            .addGap(24, 24, 24)
+
+            // ----- POSITION Y -----
+            .addComponent(positionYJLabel)
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+            .addComponent(positionPiedYJText, javax.swing.GroupLayout.PREFERRED_SIZE,
+                    javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+
+            .addGap(24, 24, 24)
+
+            // ----- DIAMETRE -----
+            .addComponent(diametreJLabel)
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+            .addComponent(diametreJText, javax.swing.GroupLayout.PREFERRED_SIZE,
+                    javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+
+            .addContainerGap(26, Short.MAX_VALUE))
+);
 
         mainPanel.add(choixLeftPanel, java.awt.BorderLayout.WEST);
 
@@ -346,6 +429,9 @@ public class MainWindow extends javax.swing.JFrame {
         largeurPieceJLabel.setText("Largeur");
         titrePieceJLabel.setText("Pièce ");
         nouvellePieceJButton.setText("Nouvelle piece");
+        nouvellePieceJButton.addActionListener((java.awt.event.ActionEvent evt) -> {
+            nouvellePieceButtonActionPerformed(evt);
+        }); 
         typePieceJLabel.setText("Type");
         typePieceComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Regulière", "Irrégulière" }));
         longueurPieceJText.setPreferredSize(new java.awt.Dimension(100, 22));
@@ -433,17 +519,13 @@ public class MainWindow extends javax.swing.JFrame {
     }
 
     private void zoomInButtonActionPerformed(java.awt.event.ActionEvent evt) {
-        if (zoomFactor < MAX_ZOOM) {
-            Point center = new Point(drawingPanel.getWidth() / 2, drawingPanel.getHeight() / 2);
-            zoomAt(center, ZOOM_INCREMENT);
-        }
+        Point center = new Point(drawingPanel.getWidth() / 2, drawingPanel.getHeight() / 2);
+        zoomAt(center, ZOOM_INCREMENT);
     }
 
     private void zoomOutButtonActionPerformed(java.awt.event.ActionEvent evt) {
-        if (zoomFactor > MIN_ZOOM) {
-            Point center = new Point(drawingPanel.getWidth() / 2, drawingPanel.getHeight() / 2);
-            zoomAt(center, -ZOOM_INCREMENT);
-        }
+        Point center = new Point(drawingPanel.getWidth() / 2, drawingPanel.getHeight() / 2);
+        zoomAt(center, -ZOOM_INCREMENT);
     }
 
     private void zoomResetButtonActionPerformed(java.awt.event.ActionEvent evt) {
@@ -457,12 +539,12 @@ public class MainWindow extends javax.swing.JFrame {
         
         double oldZoom = zoomFactor;
         double newZoom = zoomFactor + delta;
-        newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, newZoom));
 
-        if (newZoom == zoomFactor) {
-            return;
+          // Empecher zoom = 0 ou negatif
+        if (newZoom < 0.0) {
+            newZoom = 1e-10;
         }
-
+        
         double worldX = (mousePos.x - panOffsetX) / oldZoom;
         double worldY = (mousePos.y - panOffsetY) / oldZoom;
 
@@ -499,10 +581,10 @@ public class MainWindow extends javax.swing.JFrame {
 
         Point positionMonde = screenToWorld(positionSouris);
 
-        MeubleDTO selection = controller.SelectionnerElement(positionMonde);
-        if (selection != null) {
-            mettreAJourPanneauSelection(selection);
-        } else {
+        Object selection = controller.SelectionnerElement(positionMonde);
+        if (selection instanceof ElementSelectionnableDTO elementDTO) {
+            mettreAJourPanneauSelection(elementDTO);
+        }else {
             reinitialiserPanneauEdition();
         }
         rafraichirVue();
@@ -514,13 +596,11 @@ public class MainWindow extends javax.swing.JFrame {
         Point mousePos = evt.getPoint();
 
         if (rotation < 0) {
-            if (zoomFactor < MAX_ZOOM) {
                 zoomAt(mousePos, ZOOM_INCREMENT);
             }
-        } else {
-            if (zoomFactor > MIN_ZOOM) {
-                zoomAt(mousePos, -ZOOM_INCREMENT);
-            }
+         else {
+            zoomAt(mousePos, -ZOOM_INCREMENT);
+            
         }
     }
 
@@ -559,9 +639,9 @@ public class MainWindow extends javax.swing.JFrame {
         }
         controller.AjouterMeuble(dto);
 
-        MeubleDTO selection = controller.SelectionnerElement(positionMeuble);
-        if (selection != null) {
-            mettreAJourPanneauSelection(selection);
+        Object selection = controller.SelectionnerElement(positionMeuble);
+        if (selection instanceof ElementSelectionnableDTO elementDTO) {
+            mettreAJourPanneauSelection(elementDTO);
         }
 
         rafraichirVue();
@@ -573,7 +653,39 @@ public class MainWindow extends javax.swing.JFrame {
         // TODO -  : Considérer le diamètre du drain pour les cas avec drain
         ajouterMeuble(typeMeuble);
     }
-
+    
+    private void ajoutElementChauffantButtonActionPerformed(java.awt.event.ActionEvent evt) {
+        
+        ajouterElementchauffant();
+    }
+    
+    private void ajouterElementchauffant(){
+        
+        //point de depart
+        //Point origine = controller.ObtenirOrigine();
+        
+        Point positionInitiale = convertirPosition(0, 0);
+        int longueur = convertInchesToPixels(1);
+        int largeur = convertInchesToPixels(1);
+        
+        Point positionElementChauffant = new Point(positionInitiale.x , positionInitiale.y - longueur);
+        
+        ElementChauffantDTO dto = new ElementChauffantDTO(positionElementChauffant, longueur, largeur);
+        
+        controller.AjouterElementChauffant(dto);
+        
+        rafraichirVue();
+        
+        Object elementAjoute = controller.ObtenirElementSelectionne();
+        if(elementAjoute == null){
+            Object selection = controller.SelectionnerElement(positionInitiale);
+            if(selection instanceof ElementSelectionnableDTO elementDTO){
+            mettreAJourPanneauSelection(elementDTO);
+            }
+        }
+        
+        rafraichirVue();
+    }
     private int convertInchesToPixels(int valeurEnPouces) {
         Toolkit toolkit = Toolkit.getDefaultToolkit();
         int dpi = toolkit.getScreenResolution();
@@ -587,9 +699,9 @@ public class MainWindow extends javax.swing.JFrame {
         int valeurEnPouces = (int) Math.round(valeurEnPixels / dpi);
         return valeurEnPouces;
     }
-
+ 
     private void supprimerMeubleButtonActionPerformed(java.awt.event.ActionEvent e) {
-        boolean supprime = controller.SupprimerMeubleSelectionne();
+        boolean supprime = controller.SupprimerElementSelectionne();
         if (!supprime) {
             afficherErreur("pas supprime");
             return;
@@ -597,22 +709,22 @@ public class MainWindow extends javax.swing.JFrame {
         reinitialiserPanneauEdition();
         rafraichirVue();
     }
-
-    // TODO - Staelle : Considérer les cas avec drain et sans drain et le diamètre du drain
+    
+    
         // Valider si
-    private void modifierMeubleButtonActionPerformed(java.awt.event.ActionEvent e) {
+    private void modifierElementButtonActionPerformed(java.awt.event.ActionEvent e) {
 
-        if (longueurJText.getText().trim().isEmpty()
-                || largeurJText.getText().trim().isEmpty()
-                || positionXJText.getText().trim().isEmpty()
-                || positionYJText.getText().trim().isEmpty()) {
+        if (longueurPiedsJText.getText().trim().isEmpty()
+                || largeurPiedJText.getText().trim().isEmpty()
+                || positionPiedXJText.getText().trim().isEmpty()
+                || positionPiedYJText.getText().trim().isEmpty()) {
             return;
         }
 
         int longueur = 0;
         boolean longueurValide = true;
         try {
-            longueur = Integer.parseInt(longueurJText.getText().trim());
+            longueur = Integer.parseInt(longueurPiedsJText.getText().trim());
         } catch (NumberFormatException ex) {
             longueurValide = false;
         }
@@ -623,7 +735,7 @@ public class MainWindow extends javax.swing.JFrame {
         int largeur = 0;
         boolean largeurValide = true;
         try {
-            largeur = Integer.parseInt(largeurJText.getText().trim());
+            largeur = Integer.parseInt(largeurPiedJText.getText().trim());
         } catch (NumberFormatException ex) {
             largeurValide = false;
 
@@ -635,7 +747,7 @@ public class MainWindow extends javax.swing.JFrame {
         int positionX = 0;
         boolean posXValide = true;
         try {
-            positionX = Integer.parseInt(positionXJText.getText().trim());
+            positionX = Integer.parseInt(positionPiedXJText.getText().trim());
         } catch (NumberFormatException ex) {
             posXValide = false;
         }
@@ -646,7 +758,7 @@ public class MainWindow extends javax.swing.JFrame {
         int positionY = 0;
         boolean posYValide = true;
         try {
-            positionY = Integer.parseInt(positionYJText.getText().trim());
+            positionY = Integer.parseInt(positionPiedYJText.getText().trim());
         } catch (NumberFormatException ex) {
             posYValide = false;
         }
@@ -658,31 +770,10 @@ public class MainWindow extends javax.swing.JFrame {
         int largeurConvertie = convertInchesToPixels(largeur);
         Point positionConvertie = convertirPosition(positionX, positionY);
 
-        MeubleDTO meubleSelectionne = controller.ObtenirmeubleSelectionne();
+        Object elementSelectionne = controller.ObtenirElementSelectionne();
+        MeubleDTO meubleDto = (elementSelectionne instanceof MeubleDTO) ? (MeubleDTO)elementSelectionne: null;
 
-        if (meubleSelectionne != null && MEUBLES_AVEC_DRAIN.contains(meubleSelectionne.getNom())) {
-            String diamText = diametreJText.getText().trim();
-            if (!diamText.isEmpty()) {
-                boolean diametreValide = true;
-                double diamInches = 0;
-                try {
-                    diamInches = Double.parseDouble(diamText);
-                } catch (NumberFormatException ex) {
-                    diametreValide = false;
-                }
-                if (diametreValide && diamInches > 0) {
-                    int dpi = java.awt.Toolkit.getDefaultToolkit().getScreenResolution();
-                    int newDiamPixels = (int) Math.round(diamInches * dpi);
-
-                    Domaine.Entite.ElementSelectionnable element = controller.ObtenirElementSelectionneDirect();
-                    if (element instanceof Domaine.Entite.MeubleAvecDrain meubleAvecDrain) {
-                        meubleAvecDrain.setDiametreDrainPixels(newDiamPixels);
-                    }
-                }
-            }
-        }
-
-        if (meubleSelectionne != null && MEUBLES_AVEC_DRAIN.contains(meubleSelectionne.getNom())) {
+        if (meubleDto != null && MEUBLES_AVEC_DRAIN.contains(meubleDto.getNom())) {
             String diamText = diametreJText.getText().trim();
             int diametreDrainPixels = DIAMETRE_DRAIN_PIXELS;
             if (!diamText.isEmpty()) {
@@ -695,7 +786,12 @@ public class MainWindow extends javax.swing.JFrame {
                 }
                 if (diametreValide && diamInches > 0) {
                     int dpi = java.awt.Toolkit.getDefaultToolkit().getScreenResolution();
-                    diametreDrainPixels = (int) Math.round(diamInches * dpi);
+                    int newDiamPixels = (int) Math.round(diamInches * dpi);
+                    diametreDrainPixels = newDiamPixels;
+                    ElementSelectionnable element = controller.ObtenirElementSelectionneDirect();
+                    if (element instanceof Domaine.Entite.MeubleAvecDrain meubleAvecDrain) {
+                        meubleAvecDrain.setDiametreDrainPixels(newDiamPixels);
+                    }
                 }
             }
             if (largeurConvertie < diametreDrainPixels || longueurConvertie < diametreDrainPixels) {
@@ -703,15 +799,19 @@ public class MainWindow extends javax.swing.JFrame {
             }
         }
 
-        boolean modifie = controller.ModifierMeubleSelectionne(
+        boolean modifie = controller.ModifierElementSelectionne(
                 new Point(positionConvertie.x, positionConvertie.y - longueurConvertie),
                 largeurConvertie, longueurConvertie);
 
-        if (!modifie) {
-            MeubleDTO maj = controller.ObtenirmeubleSelectionne();
-            mettreAJourPanneauSelection(maj);
+        if (modifie) {
+            Object maj = controller.ObtenirElementSelectionne();
+            if(maj instanceof ElementSelectionnableDTO elemetDTO){
+                mettreAJourPanneauSelection(elemetDTO); 
+            }
             rafraichirVue();
         }
+        
+        
     }
 
     private Point convertirPosition(int x, int y) {
@@ -719,37 +819,40 @@ public class MainWindow extends javax.swing.JFrame {
         return new Point(origine.x + x, origine.y - y);
     }
 
-    private void mettreAJourPanneauSelection(MeubleDTO meuble) {
-        if (meuble == null) {
+    private void mettreAJourPanneauSelection(ElementSelectionnableDTO element) {
+        if (element == null) {
             return;
         }
-        int longueurMeuble = meuble.getLongueur();
-        int largeurMeuble = meuble.getLargeur();
-        int convertieLongueurMeuble = convertPixelsToInches(longueurMeuble);
-        int convertieLargeurMeuble = convertPixelsToInches(largeurMeuble);
-        longueurJText.setText(Integer.toString(convertieLongueurMeuble));
-        largeurJText.setText(Integer.toString(convertieLargeurMeuble));
-        Point positionBaseMeuble = meuble.getPosition();
+        int longueur = element.getLongueur();
+        int largeur = element.getLargeur();
+        int convertieLongueurMeuble = convertPixelsToInches(longueur);
+        int convertieLargeurMeuble = convertPixelsToInches(largeur);
+        longueurPiedsJText.setText(Integer.toString(convertieLongueurMeuble));
+        largeurPiedJText.setText(Integer.toString(convertieLargeurMeuble));
+        
+        Point positionBase = element.getPosition();
         Point origine = controller.ObtenirOrigine();
-        int valeurXConvertie = positionBaseMeuble.x - origine.x;
-        int valeurYConvertie = origine.y - (positionBaseMeuble.y + longueurMeuble);
-        positionXJText.setText(Integer.toString(valeurXConvertie));
+        int valeurXConvertie = positionBase.x - origine.x;
+        int valeurYConvertie = origine.y - (positionBase.y + longueur);
+        positionPiedXJText.setText(Integer.toString(valeurXConvertie));
         positionYJText.setText(Integer.toString(valeurYConvertie));
-
-        if (meuble.estAvecDrain()) {
+        
+        if (element instanceof MeubleDTO meuble && meuble.estAvecDrain()) {
             int dpi = java.awt.Toolkit.getDefaultToolkit().getScreenResolution();
             double diametreInches = (double) meuble.getDiametreDrainPixels() / dpi;
             diametreJText.setText(String.format("%.2f", diametreInches));
+            diametreJText.setEnabled(true);
         } else {
             diametreJText.setText("");
+            diametreJText.setEnabled(false);
         }
     }
 
     private void reinitialiserPanneauEdition() {
-        longueurJText.setText("");
-        largeurJText.setText("");
-        positionXJText.setText("");
-        positionYJText.setText("");
+        longueurPiedsJText.setText("");
+        largeurPiedJText.setText("");
+        positionPiedXJText.setText("");
+        positionPiedYJText.setText("");
     }
 
     private void afficherErreur(String message) {
@@ -759,6 +862,72 @@ public class MainWindow extends javax.swing.JFrame {
 
     private void rafraichirVue() {
         drawingPanel.repaint();
+    }
+    
+    private void nouvellePieceButtonActionPerformed(java.awt.event.ActionEvent evt) { 
+        String largeurText = largeurPieceJText.getText().trim();
+        String longueurText = longueurPiedsJText.getText().trim();
+        
+        int largeur, longueur;
+        
+        if (largeurText.isEmpty() && longueurText.isEmpty()) {
+            largeur = 10;
+            longueur =10;
+        } else if (largeurText.isEmpty() || longueurText.isEmpty()) {
+            System.err.println(" Erreur : Veuillez entrer les deux dimensions ou laisser vides pour 10x10.");
+            return;
+        } else {
+            try {
+                largeur = Integer.parseInt(largeurText);
+                longueur = Integer.parseInt(longueurText);
+                if (largeur <= 0 || longueur <= 0) {
+                    System.err.println( "Erreur : Dimensions doivent être > 0." );
+                    return;
+                }
+            } catch (NumberFormatException e) {
+                System.err.println("Erreur : Dimensions invalides.");
+                return;
+            }
+        }
+            int largeurPixels = convertInchesToPixels(largeur);
+            int longueurPixels = convertInchesToPixels(longueur);
+            int x = (drawingPanel.getWidth() - largeurPixels) / 2;
+            int y = (drawingPanel.getHeight() - longueurPixels) / 2;
+            
+            String typePiece = (String) typePieceComboBox.getSelectedItem();
+            java.awt.Polygon nouvelleForme;
+            
+            if ("Irregulière".equals(typePiece)) {
+                int[] xPoints = { x, x + largeurPixels, x + largeurPixels, x + largeurPixels / 2, x };
+                int[] yPoints = { y + longueurPixels / 3, y + longueurPixels / 3, y + longueurPixels, y + longueurPixels, y + longueurPixels / 3};
+                nouvelleForme = new java.awt.Polygon(xPoints, yPoints, 5);
+                
+            } else {
+                int[] xPoints = {x, x + largeurPixels, x + largeurPixels, x};
+                int[] yPoints = {y, y, y + longueurPixels, y + longueurPixels};
+                nouvelleForme = new java.awt.Polygon(xPoints, yPoints, 4);
+            }
+          
+            controller = new HeatMyFloorController();
+            controller.InitialiserPiece(nouvelleForme);
+            //drawingPanel.setController(controller);
+            
+            reinitialiserPanneauEdition();
+            largeurPieceJText.setText("");
+            longueurPieceJText.setText("");
+            rafraichirVue();
+            
+            System.out.println("Pièce '" + typePiece + "' (" + largeur + "x" + longueur + ") créée.");
+    }
+    
+    private java.awt.Polygon creerFormeIrreguliere(int largeur, int longueur) {
+        int x = (drawingPanel.getWidth() - largeur) / 2;
+        int y = (drawingPanel.getHeight() - longueur) / 2;
+        
+        int[] xPoints = { x, x + largeur, x + largeur, x + largeur/2, x};
+        int[] yPoints = { y, y, y + (longueur * 2/3), y + longueur, y + (longueur * 2/3) };
+        
+        return new java.awt.Polygon(xPoints, yPoints, 5);
     }
 
     private void diametreDrainButtonActionPerformed(java.awt.event.ActionEvent evt) {

@@ -1,17 +1,11 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
+
 package Domaine.DTO;
 
 import java.awt.Point;
 import java.util.UUID;
 
-/**
- *
- * @author charl
- */
-public class ElementChauffantDTO {
+
+public class ElementChauffantDTO implements ElementSelectionnableDTO {
     
      private Point position;
     private int longueur;
@@ -31,24 +25,29 @@ public class ElementChauffantDTO {
         id = null;
     }
       
+     @Override
      public Point getPosition() {
         return new Point(position);
     }
 
+     @Override
     public int getLongueur() {
         return longueur;
     }
 
+     @Override
     public int getLargeur() {
         return largeur;
     }
     
+     @Override
        public UUID getId() {
         return id;
     }
        
-          public boolean estSelectionne() {
-        return estSelectionne;
+     @Override
+    public boolean estSelectionne() {
+       return estSelectionne;
     }
 
 }

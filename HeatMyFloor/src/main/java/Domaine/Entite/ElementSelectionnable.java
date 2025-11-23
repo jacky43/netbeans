@@ -14,4 +14,5 @@ public interface ElementSelectionnable {
     boolean estSelectionne();
     void setSelectionne(boolean selectionne);
     void ChangerStatut();
+    Object ToDto();
 }

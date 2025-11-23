@@ -31,8 +31,11 @@ public class MainDrawer {
     }
 
     public void drawMeubles(Graphics g, ArrayList<MeubleDTO> p_meubles) {
+        
         for (MeubleDTO meuble : p_meubles) {
-            g.setColor(Color.DARK_GRAY);
+            boolean estElementChauffant = "ELEMENT_CHAUFFANT".equals(meuble.getNom());
+            if(estElementChauffant){
+                g.setColor(Color.YELLOW);
             g.fillRect(meuble.getPosition().x,
                     meuble.getPosition().y,
                     meuble.getLargeur(),
@@ -42,6 +45,19 @@ public class MainDrawer {
                     meuble.getPosition().y,
                     meuble.getLargeur(),
                     meuble.getLongueur());
+            }else{
+                g.setColor(Color.DARK_GRAY);
+            g.fillRect(meuble.getPosition().x,
+                    meuble.getPosition().y,
+                    meuble.getLargeur(),
+                    meuble.getLongueur());
+            g.setColor(Color.BLACK);
+            g.drawRect(meuble.getPosition().x,
+                    meuble.getPosition().y,
+                    meuble.getLargeur(),
+                    meuble.getLongueur());
+            }
+            
 
             if (meuble.estSelectionne()) {
                 g.setColor(Color.RED);

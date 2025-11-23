@@ -91,6 +91,7 @@ public abstract class Meuble implements ElementSelectionnable {
     {
         estSelectionne = selectionne;
     }
-     
+    
+     @Override
     public abstract MeubleDTO ToDto();
 }

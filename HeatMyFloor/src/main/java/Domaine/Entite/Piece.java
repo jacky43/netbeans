@@ -45,6 +45,11 @@ public class Piece {
         return meubles;
     }
     
+    public ArrayList<ElementSelectionnable> getElements()
+    {          
+        return new ArrayList<>(elements);
+    }
+    
     public void AjouterMeuble(MeubleDTO dto)
     {
         if(dto.estAvecDrain())
@@ -76,21 +81,21 @@ public class Piece {
         return elementSelectionne;
     }
      
-    public boolean SupprimerMeubleSelectionne()
+    public boolean SupprimerElementSelectionne()
     {
         ElementSelectionnable elementSelectionne = ObtenirElementSelectionne();
-        if(elementSelectionne instanceof Meuble meuble)
-            return SupprimerMeuble(meuble.getId());
+        if(elementSelectionne != null)
+            return SupprimerElement(elementSelectionne.getId());
         
         return false;
     }    
     
-    public boolean SupprimerMeuble(UUID id)
+    public boolean SupprimerElement(UUID id)
     {   
         for (Iterator<ElementSelectionnable> iterator = elements.iterator(); iterator.hasNext();)
         {
             ElementSelectionnable element = iterator.next();
-            if(element instanceof Meuble meuble && meuble.getId().equals(id)){
+            if(element.getId().equals(id)){
                 iterator.remove();
                 return true;
             }
@@ -106,7 +111,7 @@ public class Piece {
         return null;
     }
     
-    public boolean ModifierMeubleSelectionne(Point nouvellePosition, Integer nouvelleLargeur, Integer nouvelleLongueur)
+    public boolean ModifierElementSelectionne(Point nouvellePosition, Integer nouvelleLargeur, Integer nouvelleLongueur)
     {
         ElementSelectionnable selection = ObtenirElementSelectionne();
         if(selection == null)
@@ -136,17 +141,122 @@ public class Piece {
         return new Point(position.x, position.y + (int)forme.getBounds().getHeight());
     }
     
-    public boolean AjouterElementChauffant(ElementChauffantDTO dto)
+    public void AjouterElementChauffant(ElementChauffantDTO dto)
     {
+        //placer l'élément sur le mur le plus proche de sa position devra être modifié pour les pièces irrégulières
+        Point positionSurMur = TrouverPositionSurMurLePlusProche(dto.getPosition(), dto.getLargeur(), dto.getLongueur()); 
+        dto = new ElementChauffantDTO(positionSurMur, dto.getLargeur(), dto.getLongueur());
+        elements.add(new ElementChauffant(dto));
         
-        return true;
+    }
+    
+    public Point TrouverPositionSurMurLePlusProche(Point position, int largeur, int longueur){
+        
+        if(forme == null || forme.npoints < 2)
+            return position;
+        
+        double distanceMinimale = Double.MAX_VALUE;
+        Point meilleurPoint = new Point(position);
+        
+        //parcours des segments
+        for (int i = 0; i < forme.npoints; i++){
+            int pointSuivant = (i + 1)% forme.npoints;
+            
+            Point p1 = new Point(forme.xpoints[i], forme.ypoints[i]);
+            Point p2 = new Point(forme.xpoints[pointSuivant], forme.ypoints[pointSuivant]);
+            
+            Point pointProche = TrouverPointLePlusProcheSegment(position, p1, p2, largeur, longueur);
+            double distance = position.distance(pointProche);
+            
+            if(distance < distanceMinimale){
+                distanceMinimale = distance;
+                meilleurPoint = pointProche;
+            }
+        }
+        return meilleurPoint;
+    }
+    
+    private Point TrouverPointLePlusProcheSegment(Point point, Point segmentDebut, Point segmentFin, int largeur, int longueur){
+        
+        double dx = segmentFin.x - segmentDebut.x;
+        double dy = segmentFin.y - segmentDebut.y;
+        
+        double longueurSegment = Math.sqrt(dx * dx + dy * dy);
+        if(longueurSegment == 0)
+            return new Point(segmentDebut);
+        
+        //normaliser le vecteur
+        dx /= longueurSegment;
+        dy /= longueurSegment;
+        
+        double vx = point.x - segmentDebut.x;
+        double vy = point.y - segmentDebut.y;
+        double projection = vx * dx + vy * dy;
+        
+        //limiter projection longueur du segment
+        projection = Math.max(0, Math.min(longueurSegment, projection));
+        
+        double projectionX = segmentDebut.x + projection * dx;
+        double projectionY = segmentDebut.y + projection * dy;
+        
+        //calculer normale au segment perpendiculaire
+        double normalX = -dy;
+        double normalY = dx;
+        
+        //placer l'élément avec sa plus longeuer dimension sur le mur
+        double angleSegment = Math.atan2(dy, dx);
+        boolean estHonrizontal = Math.abs(Math.cos(angleSegment)) > Math.abs(Math.sin(angleSegment));
+        
+        //ajuste la position pour collé élément au mur décallage légéremnt a l'intérieur de la pièce
+        double offset = 0;
+        
+        int posX = (int) Math.round(projectionX + normalX * offset);
+        int posY = (int) Math.round(projectionY + normalY * offset);
+        
+        return new Point(posX, posY);
     }
     
     public boolean VerifierAdjacentMur(ElementChauffantDTO dto)
     {
-//        vérifie si deux point de element sont sur une des lignes de mur de la piece
+        //vérifie si deux point de element sont sur une des lignes de mur de la piece
+        Point position = dto.getPosition();
+        int largeur = dto.getLargeur();
+        int longueur = dto.getLongueur();
         
+        //verifie chaque segment de mur
+        for(int i = 0; i < forme.npoints; i++){
+            int p = (i + 1) % forme.npoints;
+            Point position1 = new Point(forme.xpoints[i], forme.ypoints[i]);
+            Point position2 = new Point(forme.xpoints[p], forme.ypoints[p]);
+            
+            //vérifier si l'un des coins de l'élément est proche du segment
+            double tolerance = 5.0;
+            if(DistancePointsegment(position,position1, position2) < tolerance ||
+               DistancePointsegment(new Point(position.x + largeur, position.y), position1, position2) < tolerance ||
+               DistancePointsegment(new Point(position.x, position.y + longueur), position1, position2) < tolerance ||
+               DistancePointsegment(new Point(position.x + largeur, position.y + longueur), position1, position2) < tolerance){
+                return true;
+            }
+        }
         
-        return true;
+        return false;
+    }
+    
+    //calcul la distance entre un point et un segment de ligne
+    private double DistancePointsegment(Point point, Point segmentDebut, Point segmentFin){
+        double dx = segmentFin.x - segmentDebut.x;
+        double dy = segmentFin.y - segmentDebut.y;
+        
+        double longueurSegment = dx * dx + dy * dy;
+        if(longueurSegment == 0)
+            return point.distance(segmentDebut);
+        
+        double d = ((point.x - segmentDebut.x) * dx + (point.y - segmentDebut.y) * dy ) / longueurSegment;
+        d = Math.max(0, Math.min(1, d));
+        
+        double projX = segmentDebut.x + d * dx;
+        double projY = segmentDebut.y + d * dy;
+        
+        return point.distance(projX, projY);
     }
 }
