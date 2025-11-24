@@ -8,28 +8,32 @@ import java.util.UUID;
 
 public class MeubleDTO implements ElementSelectionnableDTO {
 
+    // POINT HAUT GAUCHE
     private Point position;
+    
     private int longueur;
     private int largeur;
     private Point centreDrain;
     private String nom;
     private boolean estSelectionne;
     private UUID id;
-    private int diametreDrainPixels;
+    private int diametreDrain;
 
     public MeubleDTO(Point p_position,int p_longueur,int p_largeur,String p_nom) 
     {
+        // POINT HAUT GAUCHE
         position = new Point(p_position);
+        
         longueur = p_longueur;
         largeur = p_largeur;
         nom = p_nom;
         estSelectionne = false;
         id = null;
-        diametreDrainPixels = 10;
+        diametreDrain = 10;
         centreDrain = null;
     }
 
-    public MeubleDTO(Point p_position, int p_longueur, int p_largeur, String p_nom, Point p_centreDrain) 
+    public MeubleDTO(Point p_position, int p_longueur, int p_largeur, String p_nom, Point p_centreDrain, int p_diametreDrain) 
     {
         position = new Point(p_position);
         longueur = p_longueur;
@@ -38,7 +42,7 @@ public class MeubleDTO implements ElementSelectionnableDTO {
         centreDrain = new Point(p_centreDrain);
         estSelectionne = false;
         id = null;
-        diametreDrainPixels = 10;
+        diametreDrain = p_diametreDrain;
     }
 
     public MeubleDTO(Meuble p_meuble) {
@@ -59,7 +63,7 @@ public class MeubleDTO implements ElementSelectionnableDTO {
         if (p_meuble.getCentreDrain() != null) {
             centreDrain = new Point(p_meuble.getCentreDrain());
         }
-        this.diametreDrainPixels = p_meuble.getDiametreDrainPixels();
+        this.diametreDrain = p_meuble.getDiametreDrain();
     }
 
     public MeubleDTO(MeubleSansDrain p_meuble) {
@@ -70,6 +74,7 @@ public class MeubleDTO implements ElementSelectionnableDTO {
         return centreDrain != null;
     }
 
+    // POINT HAUT GAUCHE
     @Override
     public Point getPosition() {
         return new Point(position);
@@ -103,7 +108,7 @@ public class MeubleDTO implements ElementSelectionnableDTO {
         return id;
     }
 
-    public int  getDiametreDrainPixels() {
-        return diametreDrainPixels;
+    public int  getDiametreDrain() {
+        return diametreDrain;
     }
 }

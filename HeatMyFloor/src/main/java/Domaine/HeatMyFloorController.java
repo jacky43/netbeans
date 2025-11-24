@@ -74,6 +74,11 @@ public class HeatMyFloorController {
         return maPiece.getPositionPiece();
     }
     
+    public Point getOrigineAxes()
+    {
+        return maPiece.getOrigineAxes();
+    }
+    
     public Object SelectionnerElement(Point position)
     {
         ElementSelectionnable elementSelectionne = maPiece.SelectionnerElement(position);

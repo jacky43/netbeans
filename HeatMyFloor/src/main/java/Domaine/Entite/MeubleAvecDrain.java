@@ -6,21 +6,21 @@ import java.awt.Point;
 public class MeubleAvecDrain extends Meuble{
     
     private Point centreDrain;
-    private int diametreDrainPixels;
+    private int diametreDrain;
             
     public MeubleAvecDrain(MeubleDTO dto)
     {
         super(dto);
         centreDrain = dto.getCentreDrain();
-        this.diametreDrainPixels = (int) Math.round(0.08 * java.awt.Toolkit.getDefaultToolkit().getScreenResolution());
+        this.diametreDrain = dto.getDiametreDrain();
     }
     
-    public int getDiametreDrainPixels() {
-        return diametreDrainPixels;
+    public int getDiametreDrain() {
+        return diametreDrain;
     }
     
-    public void setDiametreDrainPixels(int diametre) {
-        this.diametreDrainPixels = Math.max(5, diametre);
+    public void setDiametreDrain(int diametre) {
+        this.diametreDrain = diametre;
     }
     
     public Point getCentreDrain()

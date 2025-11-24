@@ -4,6 +4,7 @@ import Vue.Drawing.MainDrawer;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Point;
 import java.awt.Polygon;
 import java.awt.RenderingHints;
 import java.awt.event.ComponentAdapter;
@@ -15,15 +16,21 @@ public class DrawingPanel extends JPanel {
     private static final long serialVersionUID = 1L;
     private final MainWindow mainWindow;
     private final MainDrawer mainDrawer;
+    private final int DPI = 6;
+    private final int DIMENSION_DEFAUT_PIECE_FEET = 10;
+    private final int FACTEUR_CONVERSION_FEET_INCHES = 12;
     private double zoomFactor = 1.0;
     private double panOffsetX = 0;
     private double panOffsetY = 0;
+    
+    private Point origineAxes;
     
     public DrawingPanel(MainWindow window) {
         this.mainWindow = window;
         this.mainDrawer = new MainDrawer(mainWindow.controller);
         setBorder(new BevelBorder(BevelBorder.LOWERED));
         setBackground(java.awt.Color.WHITE);
+        origineAxes = new Point(0, 0);
        
         addComponentListener(new ComponentAdapter() {
             @Override
@@ -69,36 +76,37 @@ public class DrawingPanel extends JPanel {
             mainWindow.controller.InitialiserPiece(p);
         }
         
+        origineAxes = mainWindow.controller.getOrigineAxes();
         g2d.translate(panOffsetX, panOffsetY);
         g2d.scale(zoomFactor, zoomFactor);
         
-        Dimension adjustedSize = new Dimension(
-            (int)((currentSize.width - panOffsetX) / zoomFactor),
-            (int)((currentSize.height - panOffsetY) / zoomFactor)
-        );
-        
-        mainDrawer.draw(g2d, currentSize);
+        mainDrawer.draw(g2d);
     }
     
     private Polygon creerFormeRegulierePiece(Dimension dimension) {
-        int inches = 10;
-        int DPI = 96;
-        int sizeInPixels = inches * DPI;
+        
+        // int sizeInPixels = DIMENSION_DEFAUT_PIECE_FEET * FACTEUR_CONVERSION_FEET_INCHES * DPI;
+        
+        int taillePiecePouces = DIMENSION_DEFAUT_PIECE_FEET * FACTEUR_CONVERSION_FEET_INCHES;
         
         int width = dimension.width;
         int height = dimension.height;
         
-        if (sizeInPixels > width || sizeInPixels > height) {
-            sizeInPixels = Math.min(width, height) - 20;
-            if (sizeInPixels < 0) sizeInPixels = 0;
-        }
+        int largeurEcranPouces = dimension.width / DPI;
+        int longueurEcranPouces = dimension.height / DPI;
         
-        int x = (width - sizeInPixels) / 2;
-        int y = (height - sizeInPixels) / 2;
+        int x = (largeurEcranPouces - taillePiecePouces) / 2;
+        int y = (longueurEcranPouces - taillePiecePouces) / 2;
         
-        int[] xPoints = { x, x + sizeInPixels, x + sizeInPixels, x };
-        int[] yPoints = { y, y, y + sizeInPixels, y + sizeInPixels };
+        int[] xPoints = { x, x + taillePiecePouces, x + taillePiecePouces, x };
+        int[] yPoints = { y, y, y + taillePiecePouces, y + taillePiecePouces };
         
         return new Polygon(xPoints, yPoints, 4);
     }
+    
+    public Point getOrigineAxes()
+    {
+        return origineAxes;
+    }
+    
 }

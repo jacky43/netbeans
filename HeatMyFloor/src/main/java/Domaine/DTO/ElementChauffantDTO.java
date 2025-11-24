@@ -7,7 +7,7 @@ import java.util.UUID;
 
 public class ElementChauffantDTO implements ElementSelectionnableDTO {
     
-     private Point position;
+    private Point position;
     private int longueur;
     private int largeur;
     private boolean estSelectionne;

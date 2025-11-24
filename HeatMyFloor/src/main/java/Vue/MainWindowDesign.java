@@ -201,7 +201,7 @@ public class MainWindowDesign extends javax.swing.JFrame {
                     .addGroup(choixLeftPanelLayout.createSequentialGroup()
                         .addGap(51, 51, 51)
                         .addComponent(titrePieceJLabel)))
-                .addContainerGap(21, Short.MAX_VALUE))
+                .addContainerGap(13, Short.MAX_VALUE))
         );
         choixLeftPanelLayout.setVerticalGroup(
             choixLeftPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -221,7 +221,7 @@ public class MainWindowDesign extends javax.swing.JFrame {
                 .addComponent(largeurPieceJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(12, 12, 12)
                 .addComponent(nouvellePieceJButton)
-                .addContainerGap(137, Short.MAX_VALUE))
+                .addContainerGap(130, Short.MAX_VALUE))
         );
 
         choixRightPanel.add(jMenuBarFonctions);
@@ -231,7 +231,7 @@ public class MainWindowDesign extends javax.swing.JFrame {
         drawingCenterPanelLayout.setHorizontalGroup(
             drawingCenterPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, drawingCenterPanelLayout.createSequentialGroup()
-                .addContainerGap(694, Short.MAX_VALUE)
+                .addContainerGap(903, Short.MAX_VALUE)
                 .addComponent(choixLeftPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
@@ -312,7 +312,7 @@ public class MainWindowDesign extends javax.swing.JFrame {
                 .addComponent(diametreJLabel)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(diametreJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(16, Short.MAX_VALUE))
+                .addContainerGap(147, Short.MAX_VALUE))
         );
 
         choixRightPanel.add(jMenuBarFonctions);

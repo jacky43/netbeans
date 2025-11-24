@@ -5,6 +5,7 @@ import Domaine.DTO.MeubleDTO;
 import Domaine.DTO.ElementChauffantDTO;
 import java.awt.Point;
 import java.awt.Polygon;
+import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.UUID;
@@ -129,8 +130,8 @@ public class Piece {
     {
         int minX = element.getPosition().x;
         int maxX = element.getPosition().x + element.getLargeur();
-        int minY = element.getPosition().y;
-        int maxY = element.getPosition().y + element.getLongueur();
+        int minY = element.getPosition().y - element.getLongueur();
+        int maxY = element.getPosition().y;
         return position.x >= minX && position.x <= maxX &&
                position.y >= minY && position.y <= maxY; 
     }
@@ -147,7 +148,6 @@ public class Piece {
         Point positionSurMur = TrouverPositionSurMurLePlusProche(dto.getPosition(), dto.getLargeur(), dto.getLongueur()); 
         dto = new ElementChauffantDTO(positionSurMur, dto.getLargeur(), dto.getLongueur());
         elements.add(new ElementChauffant(dto));
-        
     }
     
     public Point TrouverPositionSurMurLePlusProche(Point position, int largeur, int longueur){
@@ -189,29 +189,35 @@ public class Piece {
         dx /= longueurSegment;
         dy /= longueurSegment;
         
-        double vx = point.x - segmentDebut.x;
-        double vy = point.y - segmentDebut.y;
-        double projection = vx * dx + vy * dy;
-        
-        //limiter projection longueur du segment
-        projection = Math.max(0, Math.min(longueurSegment, projection));
-        
-        double projectionX = segmentDebut.x + projection * dx;
-        double projectionY = segmentDebut.y + projection * dy;
-        
-        //calculer normale au segment perpendiculaire
-        double normalX = -dy;
-        double normalY = dx;
         
         //placer l'élément avec sa plus longeuer dimension sur le mur
-        double angleSegment = Math.atan2(dy, dx);
-        boolean estHonrizontal = Math.abs(Math.cos(angleSegment)) > Math.abs(Math.sin(angleSegment));
+        boolean estHorizontal = Math.abs(dy) < Math.abs(dx);
+        boolean estVertical = Math.abs(dx) < Math.abs(dy);
         
-        //ajuste la position pour collé élément au mur décallage légéremnt a l'intérieur de la pièce
-        double offset = 0;
+        double projectionX ;
+        double projectionY ;
         
-        int posX = (int) Math.round(projectionX + normalX * offset);
-        int posY = (int) Math.round(projectionY + normalY * offset);
+         if(estHorizontal){
+            projectionX = Math.max(Math.min(segmentDebut.x, segmentFin.x),
+                    Math.min(point.x, Math.max(segmentDebut.x, segmentFin.x)));
+            projectionY = segmentDebut.y;
+        }else if(estVertical){
+            projectionX = Math.max(Math.min(segmentDebut.y, segmentFin.y),
+                    Math.min(point.y, Math.max(segmentDebut.y, segmentFin.y)));
+            projectionY = segmentDebut.y;
+        }else{
+            double vx = point.x - segmentDebut.x;
+            double vy = point.y - segmentDebut.y;
+            double projection = vx * dx + vy * dy;
+            
+            projection = Math.max(0, Math.min(longueurSegment, projection));
+            
+            projectionX = segmentDebut.x + projection * dx;
+            projectionY = segmentDebut.y + projection * dy;   
+        }
+        
+        int posX = (int) Math.round(projectionX);
+        int posY = (int) Math.round(projectionY);
         
         return new Point(posX, posY);
     }
@@ -258,5 +264,11 @@ public class Piece {
         double projY = segmentDebut.y + d * dy;
         
         return point.distance(projX, projY);
+    }
+    
+    public Point getOrigineAxes()
+    {
+        Rectangle boundingBox = forme.getBounds();
+        return new Point(boundingBox.x, boundingBox.y + boundingBox.height);
     }
 }

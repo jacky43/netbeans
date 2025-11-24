@@ -8,6 +8,8 @@ import java.awt.Polygon;
 import java.util.ArrayList;
 import Domaine.Entite.MeubleAvecDrain;
 import Domaine.Entite.MeubleSansDrain;
+import java.awt.Point;
+import java.awt.Rectangle;
 
 public class PieceDTO {
 
@@ -37,6 +39,12 @@ public class PieceDTO {
 
     public Polygon getForme() {
         return forme;
+    }
+    
+    public Point getOrigine()
+    {
+        Rectangle boundingBox = forme.getBounds();
+        return new Point(boundingBox.x, boundingBox.y + boundingBox.height);
     }
 
     public ArrayList<MeubleDTO> getMeubles() {
