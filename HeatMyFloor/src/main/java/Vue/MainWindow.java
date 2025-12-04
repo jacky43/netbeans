@@ -3,6 +3,7 @@ package Vue;
 import Domaine.DTO.ElementChauffantDTO;
 import Domaine.DTO.ElementSelectionnableDTO;
 import Domaine.DTO.MeubleDTO;
+import Domaine.DTO.ThermostatDTO;
 import Domaine.Entite.ElementSelectionnable;
 import Domaine.HeatMyFloorController;
 import java.awt.FlowLayout;
@@ -70,6 +71,9 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JMenuItem sauvegarderItem;
     private javax.swing.JButton ajoutMeubleSDButton;
     private javax.swing.JButton ajoutElementChauffantButton;
+    private javax.swing.JButton ajoutThermostatButton ;
+    private javax.swing.JButton activerMembraneButton ;
+    private javax.swing.JButton tracerFilButton ;
     private javax.swing.JButton supprimerMeubleButton;
     private javax.swing.JButton modifierMeubleButton;
     private javax.swing.JButton undoButton;
@@ -157,6 +161,9 @@ public class MainWindow extends javax.swing.JFrame {
         aideMenu = new javax.swing.JMenu();
         ajoutMeubleSDButton = new javax.swing.JButton();
         ajoutElementChauffantButton = new javax.swing.JButton();
+        ajoutThermostatButton = new javax.swing.JButton();
+        activerMembraneButton = new javax.swing.JButton();
+        tracerFilButton = new javax.swing.JButton();
         supprimerMeubleButton = new javax.swing.JButton();
         modifierMeubleButton = new javax.swing.JButton();
         longueurPiedJText = new javax.swing.JTextField();
@@ -193,13 +200,13 @@ public class MainWindow extends javax.swing.JFrame {
         
         longueurPiecePiedJText = new javax.swing.JTextField(3);
         longueurPiecePouceJText = new javax.swing.JTextField(3);
-longueurPieceNumJText = new javax.swing.JTextField(3);
-longueurPieceDenJText = new javax.swing.JTextField(3);
+        longueurPieceNumJText = new javax.swing.JTextField(3);
+        longueurPieceDenJText = new javax.swing.JTextField(3);
         largeurPiecePiedJText = new javax.swing.JTextField(3);
         largeurPiecePiedJText = new javax.swing.JTextField(3);
-largeurPiecePouceJText = new javax.swing.JTextField(3);
-largeurPieceNumJText = new javax.swing.JTextField(3);
-largeurPieceDenJText = new javax.swing.JTextField(3);
+        largeurPiecePouceJText = new javax.swing.JTextField(3);
+        largeurPieceNumJText = new javax.swing.JTextField(3);
+        largeurPieceDenJText = new javax.swing.JTextField(3);
         longueurPieceJLabel = new javax.swing.JLabel();
         largeurPieceJLabel = new javax.swing.JLabel();
         titrePieceJLabel = new javax.swing.JLabel();
@@ -263,6 +270,25 @@ largeurPieceDenJText = new javax.swing.JTextField(3);
             ajoutElementChauffantButtonActionPerformed(evt);
         });
         buttonTopPanel.add(ajoutElementChauffantButton);
+        
+        ajoutThermostatButton.setText("Ajouter Thermostat");
+        ajoutThermostatButton.addActionListener((java.awt.event.ActionEvent evt) -> {
+            ajouterThermostat();
+        });
+        buttonTopPanel.add(ajoutThermostatButton);
+        
+        activerMembraneButton.setText("Activer Membrane");
+        activerMembraneButton.addActionListener((java.awt.event.ActionEvent evt) -> {
+            activerMembrane();
+        });
+        buttonTopPanel.add(activerMembraneButton);
+        
+        tracerFilButton.setText("Tracer Fil Chauffant");
+        tracerFilButton.addActionListener((java.awt.event.ActionEvent evt) -> {
+            tracerFilChauffant();
+        });
+        buttonTopPanel.add(tracerFilButton);
+
         
         supprimerMeubleButton.setText("Supprimer élément sélectionné");
         supprimerMeubleButton.addActionListener((java.awt.event.ActionEvent evt) -> {
@@ -1395,7 +1421,8 @@ JPanel row(String label, JTextField ft, JTextField in, JTextField num, JTextFiel
         
         //controller = new HeatMyFloorController();
         controller.InitialiserPiece(nouvelleForme);
-        
+        controller.DefinirDimensionsPiece(largeurPouce, longueurPouce);
+        drawingPanel.mettreAJourController(controller);
         
         reinitialiserPanneauEdition();
 //        largeurPieceJText.setText("");
@@ -1474,4 +1501,80 @@ JPanel row(String label, JTextField ft, JTextField in, JTextField num, JTextFiel
             den.setText(String.valueOf(bestD));
         }
     }
+
+    private void ajouterThermostat() {
+        if (controller.ObtenirPiece() == null) {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                "Veuillez d'abord créer une pièce avant d'ajouter un thermostat.",
+                "Erreur",
+                javax.swing.JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        // Dimensions du thermostat (2x2 pouces)
+        int longueurThermostat = 2;
+        int largeurThermostat = 2;
+        
+        // Position initiale sur le mur du bas (y=0) au centre de la largeur    
+        Point positionThermostat = new Point(0, longueurThermostat);
+        
+        ThermostatDTO dto = new ThermostatDTO(
+            positionThermostat, 
+            longueurThermostat, 
+            largeurThermostat
+        );
+        
+        controller.AjouterThermostat(dto );
+        
+        Object selection = controller.SelectionnerElement(positionThermostat);
+        if (selection instanceof ElementSelectionnableDTO elementDTO) {
+            mettreAJourPanneauSelection(elementDTO);
+        }
+        rafraichirVue();
+    }
+    
+    private void activerMembrane() {
+        if (controller.ObtenirPiece() == null) {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                "Veuillez d'abord créer une pièce avant d'activer la membrane.",
+                "Erreur",
+                javax.swing.JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        // Initialiser la membrane avec espacement de 6 pouces et marge de 3 pouces
+        controller.InitialiserMenbrane(6, 118);
+        rafraichirVue();
+    }
+    
+    private void tracerFilChauffant() {
+        if (controller.ObtenirPiece() == null) {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                "Veuillez d'abord créer une pièce.",
+                "Erreur",
+                javax.swing.JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        if (controller.ObtenirThermostat() == null) {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                "Veuillez d'abord ajouter un thermostat.",
+                "Erreur",
+                javax.swing.JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        if (controller.ObtenirMenbrane() == null) {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                "Veuillez d'abord activer la membrane.",
+                "Erreur",
+                javax.swing.JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        // Tracer le fil chauffant avec une longueur maximale de 500 pouces
+        controller.TracerFilChauffant(315);
+        rafraichirVue();
+    }
+
 }

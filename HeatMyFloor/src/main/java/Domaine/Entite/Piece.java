@@ -3,6 +3,7 @@ package Domaine.Entite;
 
 import Domaine.DTO.MeubleDTO;
 import Domaine.DTO.ElementChauffantDTO;
+import Domaine.DTO.ThermostatDTO;
 import java.awt.Point;
 import java.awt.Polygon;
 import java.awt.Rectangle;
@@ -15,6 +16,13 @@ public class Piece implements Cloneable {
     private Polygon forme;
   
     private ArrayList<ElementSelectionnable> elements;
+    private ArrayList<ElementChauffant> elementChauffants;
+    private Menbrane menbrane;
+    private Thermostat thermostat;
+    private Fil fil;
+    private int largeurReellePouces;
+    private int longueurReellePouces;
+    private static final int DPI =6;
     
     public Piece()
     {
@@ -40,6 +48,24 @@ public class Piece implements Cloneable {
     public void setForme(Polygon p_forme)
     {
         forme = p_forme;
+        if(forme != null){
+            Rectangle bounds = forme.getBounds();
+            largeurReellePouces = (int) Math.round(bounds.getWidth());
+            longueurReellePouces = (int) Math.round(bounds.getHeight());
+        }
+    }
+    
+     public void DefinirDimensionReeles(int largeurPouces, int longueurPouces){
+       this.largeurReellePouces = largeurPouces;
+       this.longueurReellePouces = longueurPouces;
+    }
+    
+    public int getLargeurPouces(){
+        return largeurReellePouces;
+    }
+    
+     public int getLongueurPouces(){
+        return longueurReellePouces;
     }
     
     public ArrayList<Meuble> getMeubles()
@@ -258,7 +284,48 @@ public class Piece implements Cloneable {
                 copie.elements.add(new ElementChauffant(dto));
             }
         }
-        return copie;
-   
+        return copie;  
     }
+    
+     // Méthodes pour la membrane
+    public void InitialiserMenbrane(int espacement, int marge) {
+        if(forme == null) return;
+        Rectangle bounds = forme.getBounds();
+        int largeur = largeurReellePouces > 0 ? largeurReellePouces : (int) Math.round(bounds.getWidth());
+        int longueur = longueurReellePouces > 0 ? longueurReellePouces : (int) Math.round(bounds.getHeight());
+        //menbrane = new Menbrane((int)bounds.getWidth(), (int)bounds.getHeight(), espacement, marge);
+        menbrane = new Menbrane(largeur, longueur, espacement, marge);
+        
+    }
+    
+    public Menbrane getMembrane() {
+        return menbrane;
+    }
+    
+    // Méthodes pour le thermostat
+    public void AjouterThermostat(ThermostatDTO dto) {
+        thermostat = new Thermostat(dto);
+        elements.add(thermostat);
+    }
+    
+    public Thermostat getThermostat() {
+        return thermostat;
+    }
+    
+    // Méthodes pour le fil chauffant
+    public void TracerFilChauffant(int longueurMax) {
+        if (thermostat != null && menbrane != null) {
+            TraceurFil traceur = new TraceurFil(menbrane, getMeubles(), elements);
+            fil = traceur.tracerFilAutomatique(thermostat.getPosition(), longueurMax);
+        }
+    }
+    
+    public Fil getFilChauffant() {
+        return fil;
+    }
+    
+    public void SupprimerFilChauffant() {
+        fil = null;
+    }
+
 }

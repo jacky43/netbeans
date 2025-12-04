@@ -1,5 +1,6 @@
 package Vue;
 
+import Domaine.HeatMyFloorController;
 import Vue.Drawing.MainDrawer;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -103,5 +104,7 @@ public class DrawingPanel extends JPanel {
     {
         return origineAxes;
     }
-    
+     public void mettreAJourController(HeatMyFloorController controller){
+         mainDrawer.setController(controller);
+     }
 }

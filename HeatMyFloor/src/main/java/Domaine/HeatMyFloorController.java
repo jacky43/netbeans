@@ -3,12 +3,16 @@ package Domaine;
 import Domaine.DTO.ElementChauffantDTO;
 import Domaine.DTO.MeubleDTO;
 import Domaine.DTO.PieceDTO;
+import Domaine.DTO.ThermostatDTO;
 import Domaine.Entite.ElementChauffant;
 import Domaine.Entite.Meuble;
 import Domaine.Entite.Piece;
 import Domaine.Entite.ElementSelectionnable;
+import Domaine.Entite.Fil;
+import Domaine.Entite.Menbrane;
 import Domaine.Entite.MeubleAvecDrain;
 import Domaine.Entite.MeubleSansDrain;
+import Domaine.Entite.Thermostat;
 import java.awt.Point;
 import java.awt.Polygon;
 import java.util.ArrayList;
@@ -32,6 +36,10 @@ public class HeatMyFloorController {
         maPiece = new Piece(forme);
         estInitialise = true;
         history.clear();
+    }
+    
+    public void DefinirDimensionsPiece(int largeurpouces, int longueurPouces){
+        maPiece.DefinirDimensionReeles(largeurpouces, longueurPouces);
     }
     
     public void CreerPiece(PieceDTO p_piece)
@@ -204,4 +212,36 @@ public class HeatMyFloorController {
     public Domaine.Entite.ElementSelectionnable ObtenirElementSelectionneDirect() {
         return maPiece.ObtenirElementSelectionne();
     }
+    
+    // Méthodes pour la membrane
+    public void InitialiserMenbrane(int espacement, int marge) {
+        maPiece.InitialiserMenbrane(espacement, marge);
+    }
+    
+    public Menbrane ObtenirMenbrane() {
+        return maPiece.getMembrane();
+    }
+    
+    // Méthodes pour le thermostat
+    public void AjouterThermostat(ThermostatDTO dto) {
+        maPiece.AjouterThermostat(dto);
+    }
+    
+    public Thermostat ObtenirThermostat() {
+        return maPiece.getThermostat();
+    }
+    
+    // Méthodes pour le fil chauffant
+    public void TracerFilChauffant(int longueurMax) {
+        maPiece.TracerFilChauffant(longueurMax);
+    }
+    
+    public Fil ObtenirFilChauffant() {
+        return maPiece.getFilChauffant();
+    }
+    
+    public void SupprimerFilChauffant() {
+        maPiece.SupprimerFilChauffant();
+    }
+
 }

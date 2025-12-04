@@ -2,22 +2,32 @@ package Vue.Drawing;
 
 import Domaine.DTO.MeubleDTO;
 import Domaine.DTO.PieceDTO;
+import Domaine.Entite.Fil;
+import Domaine.Entite.Menbrane;
+import Domaine.Entite.Thermostat;
 import Domaine.HeatMyFloorController;
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Point;
 import java.awt.Polygon;
 import java.util.ArrayList;
 import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics2D;
 
 public class MainDrawer {
 
-    private final HeatMyFloorController controller;
+    private HeatMyFloorController controller;
     private final int DPI = 6;
     private Point origineAxes;
 
     public MainDrawer(HeatMyFloorController p_controller) {
         controller = p_controller;
+    }
+    
+    public void setController(HeatMyFloorController controller){
+        this.controller = controller;
     }
 
     public void draw(Graphics g) {
@@ -36,7 +46,26 @@ public class MainDrawer {
         g.fillPolygon(formeConvertie);
         g.setColor(Color.BLACK);
         g.drawPolygon(formeConvertie);
+        // Dessiner la membrane si elle existe
+        Menbrane menbrane = controller.ObtenirMenbrane();
+        if (menbrane != null) {
+            drawMenbrane(g, menbrane);
+        }
+        
+        // Dessiner le fil chauffant
+        Fil fil = controller.ObtenirFilChauffant();
+        if (fil != null) {
+            drawFil(g, fil);
+        }
+        
         drawMeubles(g, piece.getMeubles());
+        
+        // Dessiner le thermostat
+        Thermostat thermostat = controller.ObtenirThermostat();
+        if (thermostat != null) {
+           drawThermostat(g, thermostat);
+        }
+
     }
 
     // TODO : Faire 2 méthodes séparées pour les meubles et les éléments chauffanst
@@ -176,5 +205,88 @@ public class MainDrawer {
             yPoints[i] = convertToPixels(p_poly.ypoints[i]);
         
         return new Polygon(xPoints, yPoints, p_poly.npoints);
+    }
+    
+         private void drawMenbrane(Graphics g, Menbrane menbarne){
+         
+         Graphics2D g2d = (Graphics2D) g;
+         g2d.setColor(Color.red);
+         g2d.setStroke(new BasicStroke(1.0f));
+
+         
+         int largeurPixels = convertToPixels(menbarne.getLargeurPiece());
+         int longueurPixels =  convertToPixels(menbarne.getLongueurPiece());
+         int espacementPixels =  convertToPixels(menbarne.getEspacement());
+         int margePixels =  convertToPixels(menbarne.getMargeContour());
+         
+         //dessiner ligne verticale
+         for(int x = margePixels; x <= largeurPixels - margePixels; x += espacementPixels){
+             int xEcran = origineAxes.x + x;
+             int yDebut = origineAxes.y - margePixels;
+             int yFin = origineAxes.y -(longueurPixels - margePixels);
+             g.drawLine(xEcran, yDebut, xEcran, yFin);  
+         }
+         
+         //dessiner ligne horizontale
+         for(int y = margePixels; y <= longueurPixels - margePixels; y += espacementPixels){
+             int xEcran = origineAxes.y - y;
+             int yDebut = origineAxes.x + margePixels;
+             int yFin = origineAxes.x + (longueurPixels - margePixels);
+             g.drawLine(xEcran, yDebut, xEcran, yFin);  
+         }
+     }
+    
+     private void drawFil(Graphics g, Fil fil){
+         ArrayList<Point> chemin = fil.getChemin();
+         if(chemin.size() < 2) return;
+         
+         Graphics2D g2d = (Graphics2D) g;
+         g2d.setColor(Color.red);
+         g2d.setStroke(new BasicStroke(2.0f));
+         
+         for(int i = 0; i < chemin.size() - 1; i++){
+             Point p1 = chemin.get(i);
+             Point p2 = chemin.get(i + 1);
+             
+             int x1 = origineAxes.x + convertToPixels(p1.x);
+             int y1 = origineAxes.y - convertToPixels(p1.y);
+             int x2 = origineAxes.x + convertToPixels(p2.x);
+             int y2 = origineAxes.y - convertToPixels(p2.y);
+             
+             g2d.drawLine(x1, y1, x2, y2);
+         }
+     }
+    
+    private void drawThermostat(Graphics g, Thermostat thermostat){
+        Point position = thermostat.getPosition();
+        int x = convertToPixels(position.x) + origineAxes.x;
+        int y = origineAxes.y - convertToPixels(position.y);
+        int largeurPixels = convertToPixels(thermostat.getLargeur());
+        int longueurPixels = convertToPixels(thermostat.getLongueur());
+        
+        g.setColor(Color.GREEN);
+        g.fillRect(x, y, largeurPixels, longueurPixels);
+        
+        Graphics2D g2d = (Graphics2D) g;
+        g2d.setColor(Color.BLACK);
+        g2d.setStroke(new BasicStroke(2.0f));
+        g2d.drawRect(x, y, largeurPixels, longueurPixels);
+        
+        g.setFont(new Font("Arial", Font.BOLD, Math.min(largeurPixels, longueurPixels) / 2));
+        FontMetrics fm = g.getFontMetrics();
+        int textWidth = fm.stringWidth("T");
+        int textHeight = fm.getAscent();
+        
+        int textX = x + (largeurPixels - textWidth) / 2;
+        int textY = y + (longueurPixels - textWidth) / 2 - fm.getDescent();
+        
+        g.drawString("T", textX, textY);
+        
+        //Marquer si selectionne
+        if(thermostat.estSelectionne()){
+            g.setColor(Color.red);
+            g2d.setStroke(new BasicStroke(3.0f));
+            g2d.drawRect(x - 2, y - 2, largeurPixels, longueurPixels);
+        }
     }
 }
