@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.UUID;
 
-public class Piece {
+public class Piece implements Cloneable {
     
     private Polygon forme;
   
@@ -18,6 +18,12 @@ public class Piece {
     
     public Piece()
     {
+       elements = new ArrayList<>();
+    }
+    
+    public Piece(Polygon p_forme)
+    {
+       forme = p_forme;
        elements = new ArrayList<>();
     }
     
@@ -144,84 +150,41 @@ public class Piece {
     
     public void AjouterElementChauffant(ElementChauffantDTO dto)
     {
-        //placer l'élément sur le mur le plus proche de sa position devra être modifié pour les pièces irrégulières
-        Point positionSurMur = TrouverPositionSurMurLePlusProche(dto.getPosition(), dto.getLargeur(), dto.getLongueur()); 
-        dto = new ElementChauffantDTO(positionSurMur, dto.getLargeur(), dto.getLongueur());
+        Point positionInitiale = new Point(0, dto.getLongueur());
+        dto = new ElementChauffantDTO(positionInitiale, dto.getLongueur(),dto.getLargeur());
         elements.add(new ElementChauffant(dto));
     }
     
-    public Point TrouverPositionSurMurLePlusProche(Point position, int largeur, int longueur){
+    public Point TrouverPositionSurMurLePlusProche(Point positionRelative, int longueur,int largeur){
         
         if(forme == null || forme.npoints < 2)
-            return position;
+            return positionRelative;
         
-        double distanceMinimale = Double.MAX_VALUE;
-        Point meilleurPoint = new Point(position);
+        Rectangle bounds = forme.getBounds();
+        int largeurPiece = (int)bounds.getWidth();
+        int hauteurPiece = (int)bounds.getHeight();
         
-        //parcours des segments
-        for (int i = 0; i < forme.npoints; i++){
-            int pointSuivant = (i + 1)% forme.npoints;
-            
-            Point p1 = new Point(forme.xpoints[i], forme.ypoints[i]);
-            Point p2 = new Point(forme.xpoints[pointSuivant], forme.ypoints[pointSuivant]);
-            
-            Point pointProche = TrouverPointLePlusProcheSegment(position, p1, p2, largeur, longueur);
-            double distance = position.distance(pointProche);
-            
-            if(distance < distanceMinimale){
-                distanceMinimale = distance;
-                meilleurPoint = pointProche;
-            }
-        }
-        return meilleurPoint;
-    }
-    
-    private Point TrouverPointLePlusProcheSegment(Point point, Point segmentDebut, Point segmentFin, int largeur, int longueur){
+        int x  = positionRelative.x;
+        int y  = positionRelative.y;
         
-        double dx = segmentFin.x - segmentDebut.x;
-        double dy = segmentFin.y - segmentDebut.y;
+        int distanceGauche = Math.abs(x - 0);
+        int distanceDroite = Math.abs(x - largeurPiece);
+        int distanceBas = Math.abs(y - longueur);
+        int distanceHaut = Math.abs(y - hauteurPiece);
         
-        double longueurSegment = Math.sqrt(dx * dx + dy * dy);
-        if(longueurSegment == 0)
-            return new Point(segmentDebut);
-        
-        //normaliser le vecteur
-        dx /= longueurSegment;
-        dy /= longueurSegment;
-        
-        
-        //placer l'élément avec sa plus longeuer dimension sur le mur
-        boolean estHorizontal = Math.abs(dy) < Math.abs(dx);
-        boolean estVertical = Math.abs(dx) < Math.abs(dy);
-        
-        double projectionX ;
-        double projectionY ;
-        
-         if(estHorizontal){
-            projectionX = Math.max(Math.min(segmentDebut.x, segmentFin.x),
-                    Math.min(point.x, Math.max(segmentDebut.x, segmentFin.x)));
-            projectionY = segmentDebut.y;
-        }else if(estVertical){
-            projectionX = Math.max(Math.min(segmentDebut.y, segmentFin.y),
-                    Math.min(point.y, Math.max(segmentDebut.y, segmentFin.y)));
-            projectionY = segmentDebut.y;
+        int distanceMin = Math.min(Math.min(distanceGauche, distanceDroite), Math.min(distanceBas, distanceHaut));
+        //TODO
+        if(distanceMin == distanceGauche){
+            return new Point(0, Math.max(longueur, Math.min(distanceBas, distanceHaut)));
+        }else if(distanceMin == distanceDroite){
+            return new Point (largeurPiece, Math.max(longueur, Math.min(y, hauteurPiece)));
+        }else if (distanceMin == distanceBas){
+            return new Point (Math.max(0, Math.min(x, largeurPiece)), longueur);
         }else{
-            double vx = point.x - segmentDebut.x;
-            double vy = point.y - segmentDebut.y;
-            double projection = vx * dx + vy * dy;
-            
-            projection = Math.max(0, Math.min(longueurSegment, projection));
-            
-            projectionX = segmentDebut.x + projection * dx;
-            projectionY = segmentDebut.y + projection * dy;   
+            return new Point (Math.max(0, Math.min(x, largeurPiece)), hauteurPiece);
         }
-        
-        int posX = (int) Math.round(projectionX);
-        int posY = (int) Math.round(projectionY);
-        
-        return new Point(posX, posY);
     }
-    
+     
     public boolean VerifierAdjacentMur(ElementChauffantDTO dto)
     {
         //vérifie si deux point de element sont sur une des lignes de mur de la piece
@@ -270,5 +233,32 @@ public class Piece {
     {
         Rectangle boundingBox = forme.getBounds();
         return new Point(boundingBox.x, boundingBox.y + boundingBox.height);
+    }
+    
+    @Override
+    public Piece clone() {
+        Piece copie = new Piece();
+        
+        if (this.forme != null) {
+            int[] xPoints = this.forme.xpoints.clone();
+            int[] yPoints = this.forme.ypoints.clone();
+            copie.forme = new Polygon(xPoints, yPoints, this.forme.npoints);
+        }
+        
+        copie.elements = new ArrayList<>();
+        for (ElementSelectionnable element : this.elements) {
+            if (element instanceof MeubleAvecDrain){
+                MeubleDTO dto = (MeubleDTO) element.ToDto();
+                copie.elements.add(new MeubleAvecDrain(dto));
+            } else if (element instanceof MeubleSansDrain) {
+                MeubleDTO dto = (MeubleDTO) element.ToDto();
+                copie.elements.add(new MeubleSansDrain(dto));
+            } else if (element instanceof ElementChauffant) {
+                ElementChauffantDTO dto = (ElementChauffantDTO) element.ToDto();
+                copie.elements.add(new ElementChauffant(dto));
+            }
+        }
+        return copie;
+   
     }
 }

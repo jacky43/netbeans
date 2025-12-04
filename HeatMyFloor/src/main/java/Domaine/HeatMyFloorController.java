@@ -6,26 +6,32 @@ import Domaine.DTO.PieceDTO;
 import Domaine.Entite.ElementChauffant;
 import Domaine.Entite.Meuble;
 import Domaine.Entite.Piece;
+import Domaine.Entite.ElementSelectionnable;
+import Domaine.Entite.MeubleAvecDrain;
+import Domaine.Entite.MeubleSansDrain;
 import java.awt.Point;
 import java.awt.Polygon;
 import java.util.ArrayList;
-import Domaine.Entite.ElementSelectionnable;
+
 
 public class HeatMyFloorController {
     
     private Piece maPiece;
     private boolean estInitialise;
+    private ActionHistory history;
     
     public HeatMyFloorController()
     {
         maPiece = new Piece();
         estInitialise = false;
+        history = new ActionHistory();
     }
     
     public void InitialiserPiece(Polygon forme)
     {
-        maPiece.setForme(forme);
+        maPiece = new Piece(forme);
         estInitialise = true;
+        history.clear();
     }
     
     public void CreerPiece(PieceDTO p_piece)
@@ -40,14 +46,31 @@ public class HeatMyFloorController {
     
     public void AjouterMeuble(MeubleDTO dto)
     {
+        if (estInitialise) {
+            history.saveState(maPiece);
+        }
         maPiece.AjouterMeuble(dto);
     }
     
      public void AjouterElementChauffant(ElementChauffantDTO dto)
     {
+        if (estInitialise) {
+            history.saveState(maPiece);
+        }
         maPiece.AjouterElementChauffant(dto);
     }
-            
+     
+    public void saveStateBeforeDrag() {
+        if (estInitialise) {
+            history.saveState(maPiece);
+        }
+    } 
+        
+    public void saveStateAfterDrag() {
+        if (estInitialise) {
+            history.saveState(maPiece);
+        }
+    }     
     public ArrayList<MeubleDTO> ObtenirMeubles()
     {
         ArrayList<MeubleDTO> dtos = new ArrayList<>();
@@ -87,6 +110,8 @@ public class HeatMyFloorController {
     
     public boolean ModifierElementSelectionne(Point nouvellePosition, Integer nouvelleLargeur, Integer nouvelleLongueur) 
     {  
+      //  history.saveState(maPiece);
+        
         ElementSelectionnable element = maPiece.ObtenirElementSelectionne();
         if(element instanceof ElementChauffant){
             if(nouvelleLargeur != null){
@@ -96,7 +121,7 @@ public class HeatMyFloorController {
                 element.setLongueur(nouvelleLongueur);
             }
             if(nouvellePosition != null){
-                nouvellePosition = maPiece.TrouverPositionSurMurLePlusProche(nouvellePosition, element.getLargeur(), element.getLongueur());
+                nouvellePosition = maPiece.TrouverPositionSurMurLePlusProche(nouvellePosition, element.getLongueur(),element.getLargeur());
                 element.setPosition(nouvellePosition);
             }
             return true;
@@ -107,6 +132,7 @@ public class HeatMyFloorController {
     
      public boolean SupprimerElementSelectionne()
     {
+        history.saveState(maPiece);
         return maPiece.SupprimerElementSelectionne();
     }
     
@@ -114,6 +140,40 @@ public class HeatMyFloorController {
     {
         ElementSelectionnable element = maPiece.ObtenirElementSelectionne();
         return construireDto(element);
+    }
+    
+    public boolean undo() {
+        
+        if (history.canUndo()) {
+            Piece ancienEtat = history.undo(maPiece);
+            if (ancienEtat != null) {
+               maPiece = ancienEtat;
+               return true;
+            }
+        }
+        System.out.println("Controller: undo echoue");
+        return false;
+    }
+    
+    public boolean redo() {
+        if (history.canRedo()) {
+            Piece nouvelEtat = history.redo(maPiece);
+            if (nouvelEtat != null) {
+                maPiece = nouvelEtat;
+                System.out.println("Controller: maPiece remplacee, nombre d'elements: " + maPiece.getElements().size());
+                return true;
+            }
+        }
+        System.out.println("Controller: redo echoue");
+        return false;
+    }
+    
+    public boolean canUndo() {
+        return history.canUndo();
+    }
+    
+    public boolean canRedo() {
+        return history.canRedo();
     }
     
      // TODO : 

@@ -5,9 +5,15 @@ import Domaine.DTO.ElementSelectionnableDTO;
 import Domaine.DTO.MeubleDTO;
 import Domaine.Entite.ElementSelectionnable;
 import Domaine.HeatMyFloorController;
+import java.awt.FlowLayout;
 import java.awt.Point;
 import java.awt.Toolkit;
 import java.util.Set;
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
 
 @SuppressWarnings("serial")
 public class MainWindow extends javax.swing.JFrame {
@@ -30,18 +36,20 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JMenuItem exporterItem;
     private javax.swing.JMenu fichierMenu;
     private javax.swing.JMenuItem importerItem;
+    private boolean isDragging = false;
+    private Point dragStartPoint = null;
+    private Point elementStartPosition = null;
+    
+// LARGEUR ELEMENT SELECTIONNE
     private javax.swing.JLabel largeurJLabel;
-    private javax.swing.JTextField largeurPiedJText;
-    private javax.swing.JTextField largeurPouceJText;
-    private javax.swing.JTextField largeurFractionJText;
-    private javax.swing.JTextField longueurPiedJText;
-    private javax.swing.JTextField longueurPouceJText;
-    private javax.swing.JTextField longueurFractionJText;
+    private javax.swing.JTextField largeurPiedJText, largeurPouceJText, largeurFractionJText, largeurElementNumJText, largeurElementDenJText;
+    private javax.swing.JLabel LargeurPouceJLabel, LargeurPiedsJLabel;
+    
+    // LONGUEUR ELEMENT SELECTIONNE
+    private javax.swing.JTextField longueurPiedJText, longueurPouceJText, longueurFractionJText,longueurElementNumJText, longueurElementDenJText;
     private javax.swing.JLabel longueurJLabel;
-    private javax.swing.JLabel LongueurPouceJLabel;
-    private javax.swing.JLabel LongueurPiedsJLabel;
-    private javax.swing.JLabel LargeurPouceJLabel;
-    private javax.swing.JLabel LargeurPiedsJLabel;
+    private javax.swing.JLabel LongueurPouceJLabel,LongueurPiedsJLabel;
+    
     private javax.swing.JMenuBar mainMenuBar;
     private javax.swing.JPanel mainPanel;
     private javax.swing.JComboBox<String> modelisationTypesBox;
@@ -49,14 +57,15 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JMenu outilsMenu1;
     private javax.swing.JMenuItem pieceIrreguliereItem;
     private javax.swing.JMenuItem pieceReguliereItem;
-    private javax.swing.JLabel positionXJLabel;
-    private javax.swing.JLabel positionPiedXJLabel;
-    private javax.swing.JLabel positionPouceXJLabel;
-    private javax.swing.JTextField positionPiedXJText;
-    private javax.swing.JTextField positionPouceXJText;
+
+    // POSITION X ELEMENT SELECTIONNE
+    private javax.swing.JLabel positionXJLabel, positionPiedXJLabel, positionPouceXJLabel;
+    private javax.swing.JTextField positionPiedXJText, positionPouceXJText, positionXElementNumJText, positionXElementDenJText;
+
+    // POSITION Y ELEMENT SELECTIONNE
     private javax.swing.JLabel positionYJLabel;
-    private javax.swing.JTextField positionPiedYJText;
-    private javax.swing.JTextField positionPouceYJText;
+    private javax.swing.JTextField positionPiedYJText, positionPouceYJText, positionYElementNumJText, positionYElementDenJText;
+
     private javax.swing.JButton redoButton;
     private javax.swing.JMenuItem sauvegarderItem;
     private javax.swing.JButton ajoutMeubleSDButton;
@@ -70,16 +79,26 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JLabel zoomLabel;
     private javax.swing.JComboBox<String> meubleSansDrainBox;
     private javax.swing.JLabel diametreJLabel;
-    private javax.swing.JTextField diametreJText;
+
+    // DRAIN
+    private javax.swing.JTextField diametrePiedJText, diametrePouceJText, diametreNumJText, diametreDenJText;
     
     // NOUVEAUX CHAMPS POUR LA POSITION DU DRAIN
-    private javax.swing.JLabel positionDrainXJLabel;
-    private javax.swing.JTextField positionDrainXJText;
-    private javax.swing.JLabel positionDrainYJLabel;
-    private javax.swing.JTextField positionDrainYJText;
+    private javax.swing.JLabel positionDrainXJLabel, positionDrainYJLabel;
     
-    private javax.swing.JTextField largeurPieceJText;
-    private javax.swing.JTextField longueurPieceJText;
+    // POSITION DRAIN X
+    private javax.swing.JTextField positionDrainPiedXJText, positionDrainPouceXJText, positionDrainXNumJText, positionDrainXDenJText;
+    // POSITION DRAIN Y
+    private javax.swing.JTextField positionDrainPiedYJText, positionDrainPouceYJText, positionDrainYNumJText, positionDrainYDenJText;
+    
+    private javax.swing.JTextField largeurPiecePiedJText;
+    private javax.swing.JTextField largeurPiecePouceJText;
+    private javax.swing.JTextField largeurPieceNumJText;
+    private javax.swing.JTextField largeurPieceDenJText;
+    private javax.swing.JTextField longueurPiecePiedJText;
+    private javax.swing.JTextField longueurPiecePouceJText;
+    private javax.swing.JTextField longueurPieceNumJText;
+    private javax.swing.JTextField longueurPieceDenJText;
     private javax.swing.JLabel longueurPieceJLabel;
     private javax.swing.JLabel largeurPieceJLabel;
     private javax.swing.JLabel titrePieceJLabel;
@@ -94,6 +113,7 @@ public class MainWindow extends javax.swing.JFrame {
     private final int LARGEUR_INITIALE_ELTCHAUFFANT_POUCES = 24;
     private final int DPI = 6;
     private final int FACTEUR_CONVERSION_FEET_INCHES = 12;
+    private final int DIMENSION_DEFAUT_PIECE_FEET = 10;
     
     private double zoomFactor = 1.0;
     private final double ZOOM_INCREMENT = 0.1;
@@ -162,17 +182,24 @@ public class MainWindow extends javax.swing.JFrame {
         zoomOutButton = new javax.swing.JButton();
         zoomResetButton = new javax.swing.JButton();
         zoomLabel = new javax.swing.JLabel();
-        diametreJText = new javax.swing.JTextField();
+        diametrePiedJText = new javax.swing.JTextField();
         diametreJLabel = new javax.swing.JLabel();
         
         // INITIALISATION DES NOUVEAUX CHAMPS POUR LE DRAIN
         positionDrainXJLabel = new javax.swing.JLabel();
-        positionDrainXJText = new javax.swing.JTextField();
+        positionDrainPiedXJText = new javax.swing.JTextField();
         positionDrainYJLabel = new javax.swing.JLabel();
-        positionDrainYJText = new javax.swing.JTextField();
+        positionDrainPiedYJText = new javax.swing.JTextField();
         
-        longueurPieceJText = new javax.swing.JTextField();
-        largeurPieceJText = new javax.swing.JTextField();
+        longueurPiecePiedJText = new javax.swing.JTextField(3);
+        longueurPiecePouceJText = new javax.swing.JTextField(3);
+longueurPieceNumJText = new javax.swing.JTextField(3);
+longueurPieceDenJText = new javax.swing.JTextField(3);
+        largeurPiecePiedJText = new javax.swing.JTextField(3);
+        largeurPiecePiedJText = new javax.swing.JTextField(3);
+largeurPiecePouceJText = new javax.swing.JTextField(3);
+largeurPieceNumJText = new javax.swing.JTextField(3);
+largeurPieceDenJText = new javax.swing.JTextField(3);
         longueurPieceJLabel = new javax.swing.JLabel();
         largeurPieceJLabel = new javax.swing.JLabel();
         titrePieceJLabel = new javax.swing.JLabel();
@@ -193,9 +220,15 @@ public class MainWindow extends javax.swing.JFrame {
         buttonTopPanel.add(meubleSansDrainBox);
         
         undoButton.setText("Undo");
+        undoButton.addActionListener((java.awt.event.ActionEvent evt) -> {
+            undoButtonActionPerformed(evt);
+        });
         buttonTopPanel.add(undoButton);
         
         redoButton.setText("Redo");
+        redoButton.addActionListener((java.awt.event.ActionEvent evt) -> {
+            redoButtonActionPerformed(evt);
+        });
         buttonTopPanel.add(redoButton);
         
         zoomInButton.setText("Zoom +");
@@ -243,7 +276,7 @@ public class MainWindow extends javax.swing.JFrame {
         });
         buttonTopPanel.add(modifierMeubleButton);
         
-        diametreJText.setPreferredSize(new java.awt.Dimension(100, 22));
+        diametrePiedJText.setPreferredSize(new java.awt.Dimension(100, 22));
         diametreJLabel.setText("Diamètre drain");
         
         mainPanel.add(buttonTopPanel, java.awt.BorderLayout.NORTH);
@@ -265,7 +298,19 @@ public class MainWindow extends javax.swing.JFrame {
         drawingPanel.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent e) {
-                drawingCenterPanelMouseClicked(e);
+                if (!isDragging) {
+                    drawingCenterPanelMouseClicked(e);
+                } 
+            }
+            
+            @Override
+            public void mousePressed(java.awt.event.MouseEvent e) {
+                drawingPanelMousePressed(e);
+            }
+            
+            @Override
+            public void mouseReleased(java.awt.event.MouseEvent e) {
+                drawingPanelMouseReleased(e);
             }
         });
         
@@ -274,140 +319,238 @@ public class MainWindow extends javax.swing.JFrame {
             public void mouseMoved(java.awt.event.MouseEvent e) {
                 lastMousePosition = e.getPoint();
             }
+            
+            @Override
+            public void mouseDragged(java.awt.event.MouseEvent e) {
+                drawingPanelMouseDragged(e);
+            }
         });
         
         drawingPanel.addMouseWheelListener((java.awt.event.MouseWheelEvent evt) -> {
             drawingPanelMouseWheelMoved(evt);
         });
         
-        longueurJLabel.setText("Longueur");
-        LongueurPiedsJLabel.setText("ft");
-        LongueurPouceJLabel.setText("in");
-        LargeurPiedsJLabel.setText("ft");
-        LargeurPouceJLabel.setText("in");
-        largeurJLabel.setText("Largeur");
-        positionXJLabel.setText("Position X");
-        positionYJLabel.setText("Position Y");
+//        longueurJLabel.setText("Longueur");
+//        LongueurPiedsJLabel.setText("ft");
+//        LongueurPouceJLabel.setText("in");
+//        LargeurPiedsJLabel.setText("ft");
+//        LargeurPouceJLabel.setText("in");
+//        largeurJLabel.setText("Largeur");
+//        positionXJLabel.setText("Position X");
+//        positionYJLabel.setText("Position Y");
+//        
+//        positionPiedXJText.setPreferredSize(new java.awt.Dimension(25, 22));
+//        positionPiedYJText.setPreferredSize(new java.awt.Dimension(25, 22));
+//        longueurPiedJText.setPreferredSize(new java.awt.Dimension(25, 22));
+//        longueurPouceJText.setPreferredSize(new java.awt.Dimension(25, 22));
+//        largeurPiedJText.setPreferredSize(new java.awt.Dimension(25, 22));
+//        largeurPouceJText.setPreferredSize(new java.awt.Dimension(25, 22));
+//        
+//        // CONFIGURATION DES NOUVEAUX CHAMPS POUR LE DRAIN
+//        positionDrainXJLabel.setText("Position X");
+//        positionDrainYJLabel.setText("Position Y");
+//        positionDrainPiedXJText.setPreferredSize(new java.awt.Dimension(100, 22));
+//        positionDrainPiedYJText.setPreferredSize(new java.awt.Dimension(100, 22));
         
-        positionPiedXJText.setPreferredSize(new java.awt.Dimension(25, 22));
-        positionPiedYJText.setPreferredSize(new java.awt.Dimension(25, 22));
-        longueurPiedJText.setPreferredSize(new java.awt.Dimension(25, 22));
-        longueurPouceJText.setPreferredSize(new java.awt.Dimension(25, 22));
-        largeurPiedJText.setPreferredSize(new java.awt.Dimension(25, 22));
-        largeurPouceJText.setPreferredSize(new java.awt.Dimension(25, 22));
-        
-        // CONFIGURATION DES NOUVEAUX CHAMPS POUR LE DRAIN
-        positionDrainXJLabel.setText("Position X");
-        positionDrainYJLabel.setText("Position Y");
-        positionDrainXJText.setPreferredSize(new java.awt.Dimension(100, 22));
-        positionDrainYJText.setPreferredSize(new java.awt.Dimension(100, 22));
-        
-        choixLeftPanel = new javax.swing.JPanel();
-        choixLeftPanel.setPreferredSize(new java.awt.Dimension(150, 350));
-        choixLeftPanel.setBackground(java.awt.Color.WHITE);
-        choixLeftPanel.setBorder(javax.swing.BorderFactory.createLineBorder(java.awt.Color.LIGHT_GRAY, 1));
-        
-        javax.swing.GroupLayout choixLeftPanelLayout = new javax.swing.GroupLayout(choixLeftPanel);
-        choixLeftPanel.setLayout(choixLeftPanelLayout);
-        choixLeftPanelLayout.setHorizontalGroup(choixLeftPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(choixLeftPanelLayout.createSequentialGroup()
-                .addGap(29, 29, 29)
-                .addGroup(choixLeftPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    // LONGUEUR
-                    .addComponent(longueurJLabel)
-                    .addGroup(choixLeftPanelLayout.createSequentialGroup()
-                        .addComponent(longueurPiedJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(LongueurPiedsJLabel)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(longueurPouceJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(LongueurPouceJLabel)
-                    )
-                    // LARGEUR
-                    .addComponent(largeurJLabel)
-                    .addGroup(choixLeftPanelLayout.createSequentialGroup()
-                        .addComponent(largeurPiedJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(LargeurPiedsJLabel)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(largeurPouceJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(LargeurPouceJLabel)
-                    )
-                    // POSITION X
-                    .addComponent(positionXJLabel)
-                    .addComponent(positionPiedXJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    // POSITION Y
-                    .addComponent(positionYJLabel)
-                    .addComponent(positionPiedYJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    // DIAMETRE
-                    .addComponent(diametreJLabel)
-                    .addComponent(diametreJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    // POSITION DRAIN X
-                    .addComponent(positionDrainXJLabel)
-                    .addComponent(positionDrainXJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    // POSITION DRAIN Y
-                    .addComponent(positionDrainYJLabel)
-                    .addComponent(positionDrainYJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                )
-                .addContainerGap(57, Short.MAX_VALUE))
-        );
-        
-        choixLeftPanelLayout.setVerticalGroup(choixLeftPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(choixLeftPanelLayout.createSequentialGroup()
-                .addGap(12, 12, 12)
-                // LONGUEUR
-                .addComponent(longueurJLabel)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(choixLeftPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(longueurPiedJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(LongueurPiedsJLabel)
-                    .addComponent(longueurPouceJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(LongueurPouceJLabel)
-                )
-                .addGap(24, 24, 24)
-                // LARGEUR
-                .addComponent(largeurJLabel)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(choixLeftPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(largeurPiedJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(LargeurPiedsJLabel)
-                    .addComponent(largeurPouceJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(LargeurPouceJLabel)
-                )
-                .addGap(24, 24, 24)
-                // POSITION X
-                .addComponent(positionXJLabel)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+choixLeftPanel = new javax.swing.JPanel();
+choixLeftPanel.setPreferredSize(new java.awt.Dimension(200, 350));
+choixLeftPanel.setBackground(java.awt.Color.WHITE);
+choixLeftPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Élément sélectionné"));
+
+// Initialize fields ONCE
+longueurPiedJText = new javax.swing.JTextField(3);
+longueurPouceJText = new javax.swing.JTextField(3);
+longueurElementNumJText = new javax.swing.JTextField(3);
+longueurElementDenJText = new javax.swing.JTextField(3);
+
+largeurPiedJText = new javax.swing.JTextField(3);
+largeurPouceJText = new javax.swing.JTextField(3);
+largeurElementNumJText = new javax.swing.JTextField(3);
+largeurElementDenJText = new javax.swing.JTextField(3);
+
+positionPiedXJText = new javax.swing.JTextField(3);
+positionPouceXJText = new javax.swing.JTextField(3);
+positionXElementNumJText = new javax.swing.JTextField(3);
+positionXElementDenJText = new javax.swing.JTextField(3);
+
+positionPiedYJText = new javax.swing.JTextField(3);
+positionPouceYJText = new javax.swing.JTextField(3);
+positionYElementNumJText = new javax.swing.JTextField(3);
+positionYElementDenJText = new javax.swing.JTextField(3);
+
+diametrePiedJText = new javax.swing.JTextField(3);
+diametrePouceJText = new javax.swing.JTextField(3);
+diametreNumJText = new javax.swing.JTextField(3);
+diametreDenJText = new javax.swing.JTextField(3);
+
+// Drain position fields
+positionDrainPiedXJText = new javax.swing.JTextField(3);
+positionDrainPouceXJText = new javax.swing.JTextField(3);
+positionDrainXNumJText = new javax.swing.JTextField(3);
+positionDrainXDenJText = new javax.swing.JTextField(3);
+
+positionDrainPiedYJText = new javax.swing.JTextField(3);
+positionDrainPouceYJText = new javax.swing.JTextField(3);
+positionDrainYNumJText = new javax.swing.JTextField(3);
+positionDrainYDenJText = new javax.swing.JTextField(3);
+
+// Create a simple layout WITHOUT inline JLabels
+javax.swing.GroupLayout choixLeftPanelLayout = new javax.swing.GroupLayout(choixLeftPanel);
+choixLeftPanel.setLayout(choixLeftPanelLayout);
+
+// Labels as separate components (optional, but safe)
+javax.swing.JLabel longueurLabel = new javax.swing.JLabel("Longueur (X' Y'' Z/W)");
+javax.swing.JLabel largeurLabel = new javax.swing.JLabel("Largeur (X' Y'' Z/W)");
+javax.swing.JLabel posXLabel = new javax.swing.JLabel("Position X (X' Y'' Z/W)");
+javax.swing.JLabel posYLabel = new javax.swing.JLabel("Position Y (X' Y'' Z/W)");
+javax.swing.JLabel diametreLabel = new javax.swing.JLabel("Diamètre Drain (X' Y'' Z/W)");
+javax.swing.JLabel positionDrainXLabel = new javax.swing.JLabel("Position X Drain (X' Y'' Z/W)");
+javax.swing.JLabel positionDrainYLabel = new javax.swing.JLabel("Position Y Drain (X' Y'' Z/W)");
+
+choixLeftPanelLayout.setHorizontalGroup(
+    choixLeftPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+        .addGroup(choixLeftPanelLayout.createSequentialGroup()
+            .addContainerGap()
+            .addGroup(choixLeftPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addComponent(longueurLabel)
+                .addGroup(choixLeftPanelLayout.createSequentialGroup()
+                    .addComponent(longueurPiedJText, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                    .addComponent(longueurPouceJText, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                    .addComponent(longueurElementNumJText, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                    .addComponent(longueurElementDenJText, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addComponent(largeurLabel)
+                .addGroup(choixLeftPanelLayout.createSequentialGroup()
+                    .addComponent(largeurPiedJText, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                    .addComponent(largeurPouceJText, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                    .addComponent(largeurElementNumJText, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                    .addComponent(largeurElementDenJText, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addComponent(posXLabel)
+                .addGroup(choixLeftPanelLayout.createSequentialGroup()
+                    .addComponent(positionPiedXJText, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                    .addComponent(positionPouceXJText, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                    .addComponent(positionXElementNumJText, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                    .addComponent(positionXElementDenJText, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addComponent(posYLabel)
+                .addGroup(choixLeftPanelLayout.createSequentialGroup()
+                    .addComponent(positionPiedYJText, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                    .addComponent(positionPouceYJText, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                    .addComponent(positionYElementNumJText, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                    .addComponent(positionYElementDenJText, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addComponent(diametreLabel)
+                .addGroup(choixLeftPanelLayout.createSequentialGroup()
+                    .addComponent(diametrePiedJText, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                    .addComponent(diametrePouceJText, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                    .addComponent(diametreNumJText, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                    .addComponent(diametreDenJText, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE))
+             // Position X Drain
+                .addComponent(positionDrainXLabel)
+                .addGroup(choixLeftPanelLayout.createSequentialGroup()
+                    .addComponent(positionDrainPiedXJText, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                    .addComponent(positionDrainPouceXJText, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                    .addComponent(positionDrainXNumJText, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                    .addComponent(positionDrainXDenJText, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE))
+                // Position Y Drain
+                .addComponent(positionDrainYLabel)
+                .addGroup(choixLeftPanelLayout.createSequentialGroup()
+                    .addComponent(positionDrainPiedYJText, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                    .addComponent(positionDrainPouceYJText, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                    .addComponent(positionDrainYNumJText, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                    .addComponent(positionDrainYDenJText, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)))
+            .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+        )
+);
+
+choixLeftPanelLayout.setVerticalGroup(
+    choixLeftPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+        .addGroup(choixLeftPanelLayout.createSequentialGroup()
+            .addContainerGap()
+            .addComponent(longueurLabel)
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+            .addGroup(choixLeftPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addComponent(longueurPiedJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(longueurPouceJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(longueurElementNumJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(longueurElementDenJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+            .addGap(12, 12, 12)
+            .addComponent(largeurLabel)
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+            .addGroup(choixLeftPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addComponent(largeurPiedJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(largeurPouceJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(largeurElementNumJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(largeurElementDenJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+            .addGap(12, 12, 12)
+            .addComponent(posXLabel)
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+            .addGroup(choixLeftPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                 .addComponent(positionPiedXJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(24, 24, 24)
-                // POSITION Y
-                .addComponent(positionYJLabel)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(positionPouceXJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(positionXElementNumJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(positionXElementDenJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+            .addGap(12, 12, 12)
+            .addComponent(posYLabel)
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+            .addGroup(choixLeftPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                 .addComponent(positionPiedYJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(24, 24, 24)
-                // DIAMETRE
-                .addComponent(diametreJLabel)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(diametreJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(24, 24, 24)
-                // POSITION DRAIN X
-                .addComponent(positionDrainXJLabel)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(positionDrainXJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(24, 24, 24)
-                // POSITION DRAIN Y
-                .addComponent(positionDrainYJLabel)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(positionDrainYJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(26, Short.MAX_VALUE))
-        );
-        
+                .addComponent(positionPouceYJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(positionYElementNumJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(positionYElementDenJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+            .addGap(12, 12, 12)
+            .addComponent(diametreLabel)
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+            .addGroup(choixLeftPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addComponent(diametrePiedJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(diametrePouceJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(diametreNumJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(diametreDenJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+            .addGap(12, 12, 12)
+            // Position X Drain
+            .addComponent(positionDrainXLabel)
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+            .addGroup(choixLeftPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addComponent(positionDrainPiedXJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(positionDrainPouceXJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(positionDrainXNumJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(positionDrainXDenJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+            .addGap(12, 12, 12)
+            // Position Y Drain
+            .addComponent(positionDrainYLabel)
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+            .addGroup(choixLeftPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addComponent(positionDrainPiedYJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(positionDrainPouceYJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(positionDrainYNumJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(positionDrainYDenJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))    
+            .addContainerGap(20, Short.MAX_VALUE))
+);
         mainPanel.add(choixLeftPanel, java.awt.BorderLayout.WEST);
         
         drawingCenterPanel = new javax.swing.JPanel();
-        drawingCenterPanel.setPreferredSize(new java.awt.Dimension(250, 350));
+        drawingCenterPanel.setPreferredSize(new java.awt.Dimension(220, 350));
         java.awt.BorderLayout drawingCenterPanelLayout = new java.awt.BorderLayout();
         drawingCenterPanel.setLayout(drawingCenterPanelLayout);
+        
         drawingCenterPanel.add(drawingPanel, java.awt.BorderLayout.CENTER);
         
         mainPanel.add(drawingCenterPanel, java.awt.BorderLayout.CENTER);
@@ -426,50 +569,113 @@ public class MainWindow extends javax.swing.JFrame {
         typePieceJLabel.setText("Type");
         typePieceComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Regulière", "Irrégulière" }));
         
-        longueurPieceJText.setPreferredSize(new java.awt.Dimension(100, 22));
-        largeurPieceJText.setPreferredSize(new java.awt.Dimension(100, 22));
-        
-        javax.swing.GroupLayout choixRightPanelLayout = new javax.swing.GroupLayout(choixRightPanel);
-        choixRightPanelLayout.setHorizontalGroup(
-            choixRightPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(choixRightPanelLayout.createSequentialGroup()
-                .addGroup(choixRightPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(choixRightPanelLayout.createSequentialGroup()
-                        .addGap(21, 21, 21)
-                        .addGroup(choixRightPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(titrePieceJLabel)))
-                    .addComponent(typePieceJLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(typePieceComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(longueurPieceJLabel)
-                    .addComponent(longueurPieceJText, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(largeurPieceJLabel)))
-                .addComponent(largeurPieceJText, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addComponent(nouvellePieceJButton)
+       javax.swing.GroupLayout choixRightPanelLayout = new javax.swing.GroupLayout(choixRightPanel);
+choixRightPanel.setLayout(choixRightPanelLayout);
+
+// Labels
+javax.swing.JLabel pieceTitleLabel = new javax.swing.JLabel("Pièce");
+javax.swing.JLabel typeLabel = new javax.swing.JLabel("Type");
+javax.swing.JLabel longueurPieceLabel = new javax.swing.JLabel("Longueur (X' Y'' Z/W)");
+javax.swing.JLabel largeurPieceLabel = new javax.swing.JLabel("Largeur (X' Y'' Z/W)");
+
+// Champs (déjà existants)
+//longueurPieceJText.setPreferredSize(new java.awt.Dimension(40, 22));
+//largeurPieceJText.setPreferredSize(new java.awt.Dimension(40, 22));
+
+choixRightPanelLayout.setHorizontalGroup(
+    choixRightPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+        .addGroup(choixRightPanelLayout.createSequentialGroup()
+            .addContainerGap()
+            .addGroup(choixRightPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+
+                // Titre
+                .addComponent(pieceTitleLabel)
+
+                // Type
+                .addComponent(typeLabel)
+                .addComponent(typePieceComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
+
+                .addGap(12)
+
+                // Longueur pièce
+                .addComponent(longueurPieceLabel)
                 .addGroup(choixRightPanelLayout.createSequentialGroup()
-                    .addGap(51, 51, 51)
-                    .addContainerGap(21, Short.MAX_VALUE))
-        );
-        
-        choixRightPanelLayout.setVerticalGroup(
-            choixRightPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(choixRightPanelLayout.createSequentialGroup()
-                .addComponent(titrePieceJLabel)
-                .addGap(24, 24, 24)
-                .addComponent(typePieceJLabel)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(typePieceComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(24, 24, 24)
-                .addComponent(longueurPieceJLabel)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(longueurPieceJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(24, 24, 24)
-                .addComponent(largeurPieceJLabel)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(largeurPieceJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(12, 12, 12)
-                .addComponent(nouvellePieceJButton)
-                .addContainerGap(137, Short.MAX_VALUE))
-        );
+                    .addComponent(longueurPiecePiedJText, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                    .addComponent(longueurPiecePouceJText, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                    .addComponent(longueurPieceNumJText, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                    .addComponent(longueurPieceDenJText, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
+                )
+
+                .addGap(12)
+
+                // Largeur pièce
+                .addComponent(largeurPieceLabel)
+                .addGroup(choixRightPanelLayout.createSequentialGroup()
+                    .addComponent(largeurPiecePiedJText, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                    .addComponent(largeurPiecePouceJText, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                    .addComponent(largeurPieceNumJText, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                    .addComponent(largeurPieceDenJText, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
+                )
+
+                .addGap(18)
+
+                // Bouton
+                .addComponent(nouvellePieceJButton, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
+
+            )
+            .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+        )
+);
+
+choixRightPanelLayout.setVerticalGroup(
+    choixRightPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+        .addGroup(choixRightPanelLayout.createSequentialGroup()
+            .addContainerGap()
+
+            .addComponent(pieceTitleLabel)
+            .addGap(20)
+
+            .addComponent(typeLabel)
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+            .addComponent(typePieceComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+
+            .addGap(20)
+
+            // Longueur pièce
+            .addComponent(longueurPieceLabel)
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+            .addGroup(choixRightPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addComponent(longueurPiecePiedJText)
+                .addComponent(longueurPiecePouceJText)
+                .addComponent(longueurPieceNumJText)
+                .addComponent(longueurPieceDenJText)
+            )
+
+            .addGap(20)
+
+            // Largeur pièce
+            .addComponent(largeurPieceLabel)
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+            .addGroup(choixRightPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addComponent(largeurPiecePiedJText)
+                .addComponent(largeurPiecePouceJText)
+                .addComponent(largeurPieceNumJText)
+                .addComponent(largeurPieceDenJText)
+            )
+
+            .addGap(20)
+
+            .addComponent(nouvellePieceJButton)
+
+            .addContainerGap(80, Short.MAX_VALUE)
+        )
+);
         
         mainPanel.add(choixRightPanel, java.awt.BorderLayout.EAST);
         
@@ -509,20 +715,31 @@ public class MainWindow extends javax.swing.JFrame {
         
         drawingCenterPanel.setBackground(java.awt.Color.BLACK);
         
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
-        getContentPane().setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+        javax.swing.GroupLayout layout2 = new javax.swing.GroupLayout(getContentPane());
+        getContentPane().setLayout(layout2);
+        layout2.setHorizontalGroup(
+            layout2.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(mainPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+        layout2.setVerticalGroup(
+            layout2.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(mainPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         
         pack();
     }
     
+            // Helper to build a row: label + 4 fields
+JPanel row(String label, JTextField ft, JTextField in, JTextField num, JTextField den) {
+    JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT, 3, 2));
+    p.add(new JLabel(label));
+    p.add(new JLabel("ft")); p.add(ft);
+    p.add(new JLabel("in")); p.add(in);
+    p.add(new JLabel("  "));
+    p.add(num); p.add(new JLabel("/")); p.add(den);
+    p.setBorder(BorderFactory.createTitledBorder(""));
+    return p;
+}
     private void zoomInButtonActionPerformed(java.awt.event.ActionEvent evt) {
         Point center = new Point(drawingPanel.getWidth() / 2, drawingPanel.getHeight() / 2);
         zoomAt(center, ZOOM_INCREMENT);
@@ -583,8 +800,8 @@ public class MainWindow extends javax.swing.JFrame {
         Point positionSouris = evt.getPoint();
         Point positionMonde = screenToWorld(positionSouris);
         
-        largeurPieceJText.setText(Integer.toString(positionSouris.x) + ", " + Integer.toString(positionMonde.x));
-        longueurPieceJText.setText(Integer.toString(positionSouris.y) + ", " + Integer.toString(positionMonde.y));
+//        largeurPieceJText.setText(Integer.toString(positionSouris.x) + ", " + Integer.toString(positionMonde.x));
+//        longueurPieceJText.setText(Integer.toString(positionSouris.y) + ", " + Integer.toString(positionMonde.y));
         
         Object selection = controller.SelectionnerElement(positionMonde);
         if (selection instanceof ElementSelectionnableDTO elementDTO) {
@@ -593,6 +810,75 @@ public class MainWindow extends javax.swing.JFrame {
             reinitialiserPanneauEdition();
         }
         rafraichirVue();
+    }
+    
+    private void drawingPanelMousePressed(java.awt.event.MouseEvent e) { 
+        Point positionSouris = e.getPoint();
+        Point positionMonde = screenToWorld(positionSouris);
+        
+        Object selection = controller.SelectionnerElement(positionMonde);
+        
+        if (selection instanceof ElementSelectionnableDTO) {
+            controller.saveStateBeforeDrag();
+            
+            isDragging = true;
+            dragStartPoint = positionSouris;
+            elementStartPosition = ((ElementSelectionnableDTO) selection).getPosition();
+            
+            drawingPanel.setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.MOVE_CURSOR));
+        }
+        
+        rafraichirVue();
+    }
+    
+    private void drawingPanelMouseDragged(java.awt.event.MouseEvent e){ 
+        if (!isDragging || dragStartPoint == null || elementStartPosition == null) {
+            return;
+        }
+        
+        Point positionActuelle = e.getPoint();
+        
+        int deltaX = positionActuelle.x - dragStartPoint.x;
+        int deltaY = positionActuelle.y - dragStartPoint.y;
+        
+        int deltaXMonde = (int) (deltaX / (zoomFactor * DPI));
+        int deltaYMonde = -(int) (deltaY / (zoomFactor * DPI));
+        
+        Point nouvellePosition = new Point(
+            elementStartPosition.x + deltaXMonde,
+            elementStartPosition.y + deltaYMonde
+        );
+        
+        Object elementSelectionne = controller.ObtenirElementSelectionne();
+        
+        if (elementSelectionne instanceof ElementSelectionnableDTO) {
+            ElementSelectionnableDTO element = (ElementSelectionnableDTO) elementSelectionne;
+            
+            controller.ModifierElementSelectionne(
+                    nouvellePosition,
+                    element.getLargeur(),
+                    element.getLongueur()
+            );
+            rafraichirVue();
+        }
+    }
+    
+    private void drawingPanelMouseReleased(java.awt.event.MouseEvent e) { 
+        if (isDragging) {
+            isDragging = false;
+            dragStartPoint = null;
+            elementStartPosition = null;
+            
+            drawingPanel.setCursor(java.awt.Cursor.getDefaultCursor());
+            
+            controller.saveStateAfterDrag();
+            
+            Object elementSelectionne = controller.ObtenirElementSelectionne();
+            if (elementSelectionne instanceof ElementSelectionnableDTO) {
+                mettreAJourPanneauSelection((ElementSelectionnableDTO) elementSelectionne);
+            }
+            rafraichirVue();
+        }
     }
     
     private void drawingPanelMouseWheelMoved(java.awt.event.MouseWheelEvent evt) {
@@ -606,7 +892,6 @@ public class MainWindow extends javax.swing.JFrame {
         }
     }
     
-   
     private Point screenToWorld(Point screenPos) {
        
         double adjustedX = (screenPos.x - panOffsetX) / zoomFactor; 
@@ -666,7 +951,7 @@ public class MainWindow extends javax.swing.JFrame {
     private void ajouterElementchauffant() {
         //Point positionInitiale = convertirPosition(0, 0);
         
-        Point positionElementChauffant = new Point(0, LONGUEUR_INITIALE_ELTCHAUFFANT_POUCES);
+        Point positionElementChauffant = new Point(0, 0);
         ElementChauffantDTO dto = new ElementChauffantDTO(positionElementChauffant, LONGUEUR_INITIALE_ELTCHAUFFANT_POUCES, LARGEUR_INITIALE_ELTCHAUFFANT_POUCES);
         controller.AjouterElementChauffant(dto);
         rafraichirVue();
@@ -692,262 +977,432 @@ public class MainWindow extends javax.swing.JFrame {
     }
     
     private void supprimerMeubleButtonActionPerformed(java.awt.event.ActionEvent e) {
-        boolean supprime = controller.SupprimerElementSelectionne();
-        if (!supprime) {
-            afficherErreur("pas supprime");
+        Object elementSelectionne = controller.ObtenirElementSelectionne(); 
+        
+        if (elementSelectionne == null) {
+            javax.swing.JOptionPane.showMessageDialog(
+            this,
+                "Aucun élément sélectionné.",
+                "Erreur",
+                javax.swing.JOptionPane.WARNING_MESSAGE
+            );
             return;
         }
-        reinitialiserPanneauEdition();
-        rafraichirVue();
+        
+        String nomElement = "";
+        if (elementSelectionne instanceof MeubleDTO) {
+            MeubleDTO meuble = (MeubleDTO) elementSelectionne;
+            nomElement = meuble.getNom();
+        } else if (elementSelectionne instanceof ElementChauffantDTO)  {
+            nomElement = "Élément Chauffant";
+        }
+        
+        int reponse = javax.swing.JOptionPane.showConfirmDialog(
+            this,
+            "Êtes-vous sûr de vouloir supprimer cet élément ?\n\nType : " + nomElement,
+            "Confirmation de suppression",
+            javax.swing.JOptionPane.YES_NO_OPTION,
+            javax.swing.JOptionPane.QUESTION_MESSAGE
+        );
+        
+        if (reponse == javax.swing.JOptionPane.YES_OPTION) {
+        boolean supprime = controller.SupprimerElementSelectionne();
+        
+        if (supprime) {
+           reinitialiserPanneauEdition();
+           rafraichirVue();
+        } else {
+            afficherErreur("La suppression a échoué.");
+        }
+     }
+        
     }
     
     private void modifierElementButtonActionPerformed(java.awt.event.ActionEvent e) {
-        int longueur = 0;
-        int largeur = 0;
-        int positionX = 0;
-        int positionY = 0;
-        
-        if (!longueurPouceJText.getText().trim().isEmpty()) {
-            try {
-                longueur += Integer.parseInt(longueurPouceJText.getText().trim());
-            } catch (NumberFormatException ex) {
-                return;
-            }
-        }
-        
-        if (!longueurPiedJText.getText().trim().isEmpty()) {
-            try {
-                longueur += Integer.parseInt(longueurPiedJText.getText().trim()) * FACTEUR_CONVERSION_FEET_INCHES;
-            } catch (NumberFormatException ex) {
-                return;
-            }
-        }
-        
-        if (!largeurPouceJText.getText().trim().isEmpty()) {
-            try {
-                largeur += Integer.parseInt(largeurPouceJText.getText().trim());
-            } catch (NumberFormatException ex) {
-                return;
-            }
-        }
-        
-        if (!largeurPiedJText.getText().trim().isEmpty()) {
-            try {
-                largeur += Integer.parseInt(largeurPiedJText.getText().trim()) * FACTEUR_CONVERSION_FEET_INCHES;
-            } catch (NumberFormatException ex) {
-                return;
-            }
-        }
-        
-        if (!positionPiedXJText.getText().trim().isEmpty()) {
-            try {
-                positionX += Integer.parseInt(positionPiedXJText.getText().trim());
-            } catch (NumberFormatException ex) {
-                return;
-            }
-        }
-        
-        if (!positionPiedYJText.getText().trim().isEmpty()) {
-            try {
-                positionY += Integer.parseInt(positionPiedYJText.getText().trim());
-            } catch (NumberFormatException ex) {
-                return;
-            }
-        }
-        
-        int longueurConvertie = longueur;
-        int largeurConvertie = largeur;
-        Point positionConvertie = new Point(positionX, positionY + longueur);
-        
-        Object elementSelectionne = controller.ObtenirElementSelectionne();
-        MeubleDTO meubleDto = (elementSelectionne instanceof MeubleDTO) ? (MeubleDTO) elementSelectionne : null;
-        
-        if (meubleDto != null && MEUBLES_AVEC_DRAIN.contains(meubleDto.getNom())) {
-            String diamText = diametreJText.getText().trim();
-            int diametreDrainPixels = DIAMETRE_DRAIN_POUCES;
-            
-            if (!diamText.isEmpty()) {
-                boolean diametreValide = true;
-                double diamInches = 0;
-                try {
-                    diamInches = Double.parseDouble(diamText);
-                } catch (NumberFormatException ex) {
-                    diametreValide = false;
-                }
-                
-                if (diametreValide && diamInches > 0) {
-                    int newDiamPixels = (int)diamInches; //(int) Math.round(diamInches * DPI);
-                    diametreDrainPixels = newDiamPixels;
-                    
-                    ElementSelectionnable element = controller.ObtenirElementSelectionneDirect();
-                    if (element instanceof Domaine.Entite.MeubleAvecDrain meubleAvecDrain) {
-                        meubleAvecDrain.setDiametreDrain(newDiamPixels);
-                    }
-                }
-            }
-            
-            // GESTION DE LA POSITION DU DRAIN
-            String drainXText = positionDrainXJText.getText().trim();
-            String drainYText = positionDrainYJText.getText().trim();
-            
-            if (!drainXText.isEmpty() && !drainYText.isEmpty()) {
-                try {
-                    int drainX = Integer.parseInt(drainXText);
-                    int drainY = Integer.parseInt(drainYText);
-                    
-                    // Vérifier que la position du drain est dans les limites du meuble
-                    if (drainX >= 0 && drainX <= largeurConvertie && 
-                        drainY >= 0 && drainY <= longueurConvertie) {
-                        
-                        ElementSelectionnable element = controller.ObtenirElementSelectionneDirect();
-                        if (element instanceof Domaine.Entite.MeubleAvecDrain meubleAvecDrain) {
-                            meubleAvecDrain.setCentreDrain(new Point(drainX, drainY));
-                        }
-                    }
-                } catch (NumberFormatException ex) {
-                    // Position du drain invalide, on ignore
-                }
-            }
-            
-            if (largeurConvertie < diametreDrainPixels || longueurConvertie < diametreDrainPixels) {
-                return;
-            }
-        }
-        
-        boolean modifie = controller.ModifierElementSelectionne(
-            new Point(positionConvertie.x, positionConvertie.y),
-            largeurConvertie,
-            longueurConvertie);
-        
-        if (modifie) {
-            Object maj = controller.ObtenirElementSelectionne();
-            if (maj instanceof ElementSelectionnableDTO elemetDTO) {
-                mettreAJourPanneauSelection(elemetDTO);
-            }
-            rafraichirVue();
+    int longueur = 0;
+    int largeur = 0;
+    int positionX = 0;
+    int positionY = 0;
+    
+    if (!longueurPouceJText.getText().trim().isEmpty()) {
+        try {
+            longueur += Integer.parseInt(longueurPouceJText.getText().trim());
+        } catch (NumberFormatException ex) {
+            return;
         }
     }
+    
+    if (!longueurPiedJText.getText().trim().isEmpty()) {
+        try {
+            longueur += Integer.parseInt(longueurPiedJText.getText().trim()) * FACTEUR_CONVERSION_FEET_INCHES;
+        } catch (NumberFormatException ex) {
+            return;
+        }
+    }
+    
+    if (!largeurPouceJText.getText().trim().isEmpty()) {
+        try {
+            largeur += Integer.parseInt(largeurPouceJText.getText().trim());
+        } catch (NumberFormatException ex) {
+            return;
+        }
+    }
+    
+    if (!largeurPiedJText.getText().trim().isEmpty()) {
+        try {
+            largeur += Integer.parseInt(largeurPiedJText.getText().trim()) * FACTEUR_CONVERSION_FEET_INCHES;
+        } catch (NumberFormatException ex) {
+            return;
+        }
+    }
+    
+    if (!positionPiedXJText.getText().trim().isEmpty())  {
+        try {
+            positionX += Integer.parseInt(positionPiedXJText.getText().trim())* FACTEUR_CONVERSION_FEET_INCHES;
+        } catch (NumberFormatException ex) {
+            return;
+        }
+    }
+    if (!positionPouceXJText.getText().trim().isEmpty())  {
+        try {
+            positionX += Integer.parseInt(positionPouceXJText.getText().trim());
+        } catch (NumberFormatException ex) {
+            return;
+        }
+    }
+     
+    if (!positionPiedYJText.getText().trim().isEmpty()) {
+        try {
+            positionY += Integer.parseInt(positionPiedYJText.getText().trim())* FACTEUR_CONVERSION_FEET_INCHES;
+        } catch (NumberFormatException ex) {
+            return;
+        }
+    }
+    if (!positionPouceYJText.getText().trim().isEmpty()) {
+        try {
+            positionY += Integer.parseInt(positionPouceYJText.getText().trim());
+        } catch (NumberFormatException ex) {
+            return;
+        }
+    }
+      
+    int longueurConvertie = longueur;
+    int largeurConvertie = largeur;
+    Point positionConvertie = new Point(positionX, positionY + longueur);
+    
+    Object elementSelectionne = controller.ObtenirElementSelectionne();
+    MeubleDTO meubleDto = (elementSelectionne instanceof MeubleDTO) ? (MeubleDTO) elementSelectionne : null;
+     
+    // TRAITER LE DRAIN AVANT DE MODIFIER L'ÉLÉMENT
+    if (meubleDto != null && MEUBLES_AVEC_DRAIN.contains(meubleDto.getNom())) {
+        ElementSelectionnable element = controller.ObtenirElementSelectionneDirect();
+        
+        if (element instanceof Domaine.Entite.MeubleAvecDrain meubleAvecDrain) {
+            // Modifier le diamètre du drain
+            String diamText = diametrePiedJText.getText().trim();
+            String diamTextPouce = diametrePouceJText.getText().trim();
+            if (!diamText.isEmpty()||!diamTextPouce.isEmpty()) {
+                try {
+                    int diamInches = Integer.parseInt(diamText)*FACTEUR_CONVERSION_FEET_INCHES;
+                     diamInches += Integer.parseInt(diamTextPouce);
+                    if (diamInches > 0) {
+                        meubleAvecDrain.setDiametreDrain(diamInches);
+                        System.out.println("Diamètre drain modifié: " + diamInches);
+                    }
+                } catch (NumberFormatException ex) {
+                    System.err.println("Diamètre invalide");
+                }
+            }
+            
+            // MODIFIER LA POSITION DU DRAIN
+            int drainX = -1;
+            int drainY = -1;
+            boolean drainPosModifiee = false;
+            
+            // Parse drain X (pieds + pouces)
+            String drainXPiedText = positionDrainPiedXJText.getText().trim();
+            String drainXPouceText = positionDrainPouceXJText.getText().trim();
+            
+            if (!drainXPiedText.isEmpty() || !drainXPouceText.isEmpty()) {
+                drainX = 0;
+                if (!drainXPiedText.isEmpty()) {
+                    try {
+                        drainX += Integer.parseInt(drainXPiedText) * FACTEUR_CONVERSION_FEET_INCHES;
+                    } catch (NumberFormatException ex) {
+                        System.err.println("Erreur parse drain X pieds");
+                    }
+                }
+                if (!drainXPouceText.isEmpty()) {
+                    try {
+                        drainX += Integer.parseInt(drainXPouceText);
+                    } catch (NumberFormatException ex) {
+                        System.err.println("Erreur parse drain X pouces");
+                    }
+                }
+                drainPosModifiee = true;
+            }
+            
+            // Parse drain Y (pieds + pouces)
+            String drainYPiedText = positionDrainPiedYJText.getText().trim();
+            String drainYPouceText = positionDrainPouceYJText.getText().trim();
+            
+            if (!drainYPiedText.isEmpty() || !drainYPouceText.isEmpty()) {
+                drainY = 0;
+                if (!drainYPiedText.isEmpty()) {
+                    try {
+                        drainY += Integer.parseInt(drainYPiedText) * FACTEUR_CONVERSION_FEET_INCHES;
+                    } catch (NumberFormatException ex) {
+                        System.err.println("Erreur parse drain Y pieds");
+                    }
+                }
+                if (!drainYPouceText.isEmpty()) {
+                    try {
+                        drainY += Integer.parseInt(drainYPouceText);
+                    } catch (NumberFormatException ex) {
+                        System.err.println("Erreur parse drain Y pouces");
+                    }
+                }
+            }
+            
+            // Appliquer la nouvelle position du drain
+            if (drainPosModifiee && drainX >= 0 && drainY >= 0) {
+                System.out.println("Tentative de déplacement drain vers: (" + drainX + ", " + drainY + ")");
+                System.out.println("Limites meuble: largeur=" + largeurConvertie + ", longueur=" + longueurConvertie);
+                
+                if (drainX <= largeurConvertie && drainY <= longueurConvertie) {
+                    Point nouveauCentre = new Point(drainX, drainY);
+                    meubleAvecDrain.setCentreDrain(nouveauCentre);
+                    System.out.println("Position drain mise à jour: " + nouveauCentre);
+                    System.out.println("Vérification après set: " + meubleAvecDrain.getCentreDrain());
+                } else {
+                    System.out.println("Position drain hors limites du meuble");
+                }
+            }
+        }
+    }
+    
+    // MODIFIER L'ÉLÉMENT (position, largeur, longueur)
+    boolean modifie = controller.ModifierElementSelectionne(
+        new Point(positionConvertie.x, positionConvertie.y),
+        largeurConvertie,
+        longueurConvertie);
+    
+    if (modifie) {
+        Object maj = controller.ObtenirElementSelectionne();
+        if (maj instanceof ElementSelectionnableDTO elemetDTO) {
+            mettreAJourPanneauSelection(elemetDTO);
+        }
+        rafraichirVue();
+    }
+}
     
     private Point convertirPosition(int x, int y) {
         Point origine = controller.ObtenirOrigine();
         return new Point(origine.x + x, origine.y - y);
     }
     
-    private void mettreAJourPanneauSelection(ElementSelectionnableDTO element) {
-        if (element == null) {
-            return;
-        }
-        
-        int longueur = element.getLongueur();
-        int largeur = element.getLargeur();
-        
-        longueurPiedJText.setText(Integer.toString((int) longueur / FACTEUR_CONVERSION_FEET_INCHES));
-        largeurPiedJText.setText(Integer.toString((int) largeur / FACTEUR_CONVERSION_FEET_INCHES));
-        longueurPouceJText.setText(Integer.toString(longueur % FACTEUR_CONVERSION_FEET_INCHES));
-        largeurPouceJText.setText(Integer.toString(largeur % FACTEUR_CONVERSION_FEET_INCHES));
-        
-        Point positionBase = element.getPosition();
-        positionPiedXJText.setText(Integer.toString(positionBase.x));
-        positionPiedYJText.setText(Integer.toString(positionBase.y - longueur));
-        
-        if (element instanceof MeubleDTO meuble && meuble.estAvecDrain()) {
-            diametreJText.setText(Integer.toString(meuble.getDiametreDrain()));
-            diametreJText.setEnabled(true);
-            
-            // AFFICHER LA POSITION DU DRAIN
-            Point centreDrain = meuble.getCentreDrain();
-            if (centreDrain != null) {
-                positionDrainXJText.setText(Integer.toString(centreDrain.x));
-                positionDrainYJText.setText(Integer.toString(centreDrain.y));
-                positionDrainXJText.setEnabled(true);
-                positionDrainYJText.setEnabled(true);
-            } else {
-                positionDrainXJText.setText("");
-                positionDrainYJText.setText("");
-                positionDrainXJText.setEnabled(false);
-                positionDrainYJText.setEnabled(false);
-            }
-        } else {
-            diametreJText.setText("");
-            diametreJText.setEnabled(false);
-            positionDrainXJText.setText("");
-            positionDrainYJText.setText("");
-            positionDrainXJText.setEnabled(false);
-            positionDrainYJText.setEnabled(false);
-        }
+  private void mettreAJourPanneauSelection(ElementSelectionnableDTO element) {
+    if (element == null) {
+        return;
     }
+    
+    int longueur = element.getLongueur();
+    int largeur = element.getLargeur();
+    
+    longueurPiedJText.setText(Integer.toString((int) longueur / FACTEUR_CONVERSION_FEET_INCHES));
+    largeurPiedJText.setText(Integer.toString((int) largeur / FACTEUR_CONVERSION_FEET_INCHES));
+    longueurPouceJText.setText(Integer.toString(longueur % FACTEUR_CONVERSION_FEET_INCHES));
+    largeurPouceJText.setText(Integer.toString(largeur % FACTEUR_CONVERSION_FEET_INCHES));
+    
+    Point positionBase = element.getPosition();
+    positionPiedXJText.setText(Integer.toString(positionBase.x/FACTEUR_CONVERSION_FEET_INCHES));
+    positionPiedYJText.setText(Integer.toString((positionBase.y - longueur)/ FACTEUR_CONVERSION_FEET_INCHES));
+    positionPouceXJText.setText(Integer.toString(positionBase.x%FACTEUR_CONVERSION_FEET_INCHES));
+    positionPouceYJText.setText(Integer.toString((positionBase.y - longueur)% FACTEUR_CONVERSION_FEET_INCHES));
+    
+    if (element instanceof MeubleDTO meuble && meuble.estAvecDrain()) {
+        diametrePiedJText.setText(Integer.toString(meuble.getDiametreDrain()/FACTEUR_CONVERSION_FEET_INCHES));
+        diametrePouceJText.setText(Integer.toString(meuble.getDiametreDrain()%FACTEUR_CONVERSION_FEET_INCHES));
+        diametrePiedJText.setEnabled(true);
+        
+        // AFFICHER LA POSITION DU DRAIN
+        Point centreDrain = meuble.getCentreDrain();
+        if (centreDrain != null) {
+            // AJOUT DE DEBUG
+            // System.out.println("=== MISE À JOUR PANNEAU ===");
+            // System.out.println("Centre drain du DTO: " + centreDrain);
+            positionDrainPiedXJText.setText(Integer.toString((int)(centreDrain.x / FACTEUR_CONVERSION_FEET_INCHES)));
+            positionDrainPiedYJText.setText(Integer.toString((int)(centreDrain.y / FACTEUR_CONVERSION_FEET_INCHES)));
+            positionDrainPiedXJText.setEnabled(true);
+            positionDrainPiedYJText.setEnabled(true);
+            positionDrainPouceXJText.setText(Integer.toString((int)(centreDrain.x % FACTEUR_CONVERSION_FEET_INCHES)));
+            positionDrainPouceYJText.setText(Integer.toString((int)(centreDrain.y % FACTEUR_CONVERSION_FEET_INCHES)));
+            positionDrainPouceXJText.setEnabled(true);
+            positionDrainPouceYJText.setEnabled(true);
+        } else {
+            positionDrainPiedXJText.setText("");
+            positionDrainPiedYJText.setText("");
+            positionDrainPiedXJText.setEnabled(false);
+            positionDrainPiedYJText.setEnabled(false);
+        }
+    } else {
+        diametrePiedJText.setText("");
+        diametrePiedJText.setEnabled(false);
+        positionDrainPiedXJText.setText("");
+        positionDrainPiedYJText.setText("");
+        positionDrainPiedXJText.setEnabled(false);
+        positionDrainPiedYJText.setEnabled(false);
+    }
+}
     
     private void reinitialiserPanneauEdition() {
         longueurPiedJText.setText("");
+        longueurPouceJText.setText("");
         largeurPiedJText.setText("");
+        largeurPouceJText.setText("");
         positionPiedXJText.setText("");
+        positionPouceXJText.setText("");
         positionPiedYJText.setText("");
-        diametreJText.setText("");
-        positionDrainXJText.setText("");
-        positionDrainYJText.setText("");
+        positionPouceYJText.setText("");
+        diametrePiedJText.setText("");
+        positionDrainPiedXJText.setText("");
+        positionDrainPiedYJText.setText("");
     }
     
     private void afficherErreur(String message) {
-        // TODO : A completer
+        // TODO : A completer 
+        javax.swing.JOptionPane.showMessageDialog(
+            this,
+            message,
+            "Erreur",
+            javax.swing.JOptionPane.ERROR_MESSAGE
+        );
     }
     
     private void rafraichirVue() {
         drawingPanel.repaint();
     }
     
-    private void nouvellePieceButtonActionPerformed(java.awt.event.ActionEvent evt) {
-        String largeurText = largeurPieceJText.getText().trim();
-        String longueurText = longueurPiedJText.getText().trim();
-        int largeur, longueur;
-        
-        if (largeurText.isEmpty() && longueurText.isEmpty()) {
-            largeur = 10;
-            longueur = 10;
-        } else if (largeurText.isEmpty() || longueurText.isEmpty()) {
-            System.err.println(" Erreur : Veuillez entrer les deux dimensions ou laisser vides pour 10x10.");
-            return;
-        } else {
-            try {
-                largeur = Integer.parseInt(largeurText);
-                longueur = Integer.parseInt(longueurText);
-                if (largeur <= 0 || longueur <= 0) {
+    
+    private int VerifierEtParse(String nb)
+    {
+        int valeur;
+     if(nb.isEmpty())
+     {
+         return 0;
+     }
+        try {
+                valeur = Integer.parseInt(nb);
+                if (valeur <= 0 ) {
                     System.err.println("Erreur : Dimensions doivent être > 0.");
-                    return;
+                    return -1;
                 }
             } catch (NumberFormatException e) {
                 System.err.println("Erreur : Dimensions invalides.");
-                return;
+                return -1;
             }
+        return valeur;
+    }
+    
+    
+    private double TransformerVersPouce(int pieds,int pouces, int num,int den)
+    {
+    double total;
+    
+    total = pieds*FACTEUR_CONVERSION_FEET_INCHES + pouces;
+    if(num !=0 && den !=0)
+    {
+        total += (num/den);
+    }
+    return total;
+    }
+    
+    private void undoButtonActionPerformed(java.awt.event.ActionEvent evt) {
+        System.out.println("BUTTON UNDO CLIQUE !!!");
+        javax.swing.JOptionPane.showMessageDialog(this, "Undo clique!");
+        
+        if (controller.undo()){
+            reinitialiserPanneauEdition();
+            rafraichirVue();
+        }            
+    }
+    
+    private void redoButtonActionPerformed(java.awt.event.ActionEvent evt) {
+        System.out.println("BUTTON REDO CLIQUE !!!");
+        javax.swing.JOptionPane.showMessageDialog(this, "Redo clique!");
+        
+        if(controller.redo()) {
+            reinitialiserPanneauEdition();
+            rafraichirVue();
+        }
+    }
+    
+    private void nouvellePieceButtonActionPerformed(java.awt.event.ActionEvent evt) {
+        String largeurPiedText = largeurPiecePiedJText.getText().trim();
+        String largeurPouceText = largeurPiecePouceJText.getText().trim();
+        String largeurNumText = largeurPieceNumJText.getText().trim();
+        String largeurDenText = largeurPieceDenJText.getText().trim();
+        String longueurPiedText = longueurPiecePiedJText.getText().trim();
+        String longueurPouceText = longueurPiecePouceJText.getText().trim();
+        String longueurNumText = longueurPieceNumJText.getText().trim();
+        String longueurDenText = longueurPieceDenJText.getText().trim();
+        int largeurPied,largeurPouce,largeurNum,largeurDen,longueurPied,longueurPouce,longueurNum,longueurDen;
+        double largeur,longueur;
+        
+  
+        largeurPied = VerifierEtParse(largeurPiedText);
+        largeurPouce = VerifierEtParse(largeurPouceText);
+        largeurNum = VerifierEtParse(largeurNumText);
+        largeurDen = VerifierEtParse(largeurDenText);
+        longueurPied = VerifierEtParse(longueurPiedText);
+        longueurPouce = VerifierEtParse(longueurPouceText);
+        longueurNum = VerifierEtParse(longueurNumText);
+        longueurDen = VerifierEtParse(longueurDenText);
+        
+        if(largeurPied ==-1 || largeurPouce ==-1 || largeurNum==-1 ||largeurDen ==-1 || longueurPied == -1 || longueurPouce == -1 || longueurNum == -1 || longueurDen ==-1)
+        {
+            return;
+        }
+        largeur = TransformerVersPouce(largeurPied,largeurPouce,largeurNum,largeurDen);
+        longueur = TransformerVersPouce(longueurPied,longueurPouce,longueurNum,longueurDen);
+        
+        if (largeur == 0 || longueur == 0)
+        {
+            largeur = DIMENSION_DEFAUT_PIECE_FEET * FACTEUR_CONVERSION_FEET_INCHES;
+            longueur = DIMENSION_DEFAUT_PIECE_FEET * FACTEUR_CONVERSION_FEET_INCHES;
         }
         
-        int largeurPixels = convertInchesToPixels(largeur);
-        int longueurPixels = convertInchesToPixels(longueur);
+        //todo changer pour pouvoir avoir double
         
-        int x = (drawingPanel.getWidth() - largeurPixels) / 2;
-        int y = (drawingPanel.getHeight() - longueurPixels) / 2;
+        int largeurPixels = (int)largeur; //convertInchesToPixels((int)largeur);
+        int longueurPixels = (int)longueur; //convertInchesToPixels((int)longueur);
         
-        String typePiece = (String) typePieceComboBox.getSelectedItem();
+        int x = (int)(drawingPanel.getWidth() / DPI - largeur) / 2;
+        int y = (int)(drawingPanel.getHeight() / DPI - longueur) / 2;
+        
+        //String typePiece = (String) typePieceComboBox.getSelectedItem();
         java.awt.Polygon nouvelleForme;
         
-        if ("Irregulière".equals(typePiece)) {
-            int[] xPoints = {x, x + largeurPixels, x + largeurPixels, x + largeurPixels / 2, x};
-            int[] yPoints = {y + longueurPixels / 3, y + longueurPixels / 3, y + longueurPixels, y + longueurPixels, y + longueurPixels / 3};
-            nouvelleForme = new java.awt.Polygon(xPoints, yPoints, 5);
-        } else {
+//        if ("Irregulière".equals(typePiece)) {
+//            int[] xPoints = {x, x + largeurPixels, x + largeurPixels, x + largeurPixels / 2, x};
+//            int[] yPoints = {y + longueurPixels / 3, y + longueurPixels / 3, y + longueurPixels, y + longueurPixels, y + longueurPixels / 3};
+//            nouvelleForme = new java.awt.Polygon(xPoints, yPoints, 5);
+//        } else {
             int[] xPoints = {x, x + largeurPixels, x + largeurPixels, x};
-            int[] yPoints = {y, y, y + longueurPixels, y + longueurPixels};
+           int[] yPoints = {y, y, y + longueurPixels, y + longueurPixels};
             nouvelleForme = new java.awt.Polygon(xPoints, yPoints, 4);
-        }
+//        }
         
-        controller = new HeatMyFloorController();
+        //controller = new HeatMyFloorController();
         controller.InitialiserPiece(nouvelleForme);
         
+        
         reinitialiserPanneauEdition();
-        largeurPieceJText.setText("");
-        longueurPieceJText.setText("");
+//        largeurPieceJText.setText("");
+//        longueurPieceJText.setText("");
         rafraichirVue();
         
-        System.out.println("Pièce '" + typePiece + "' (" + largeur + "x" + longueur + ") créée.");
+//        System.out.println("Pièce '" + typePiece + "' (" + largeur + "x" + longueur + ") créée.");
     }
     
     private java.awt.Polygon creerFormeIrreguliere(int largeur, int longueur) {
@@ -958,5 +1413,65 @@ public class MainWindow extends javax.swing.JFrame {
         int[] yPoints = {y, y, y + (longueur * 2 / 3), y + longueur, y + (longueur * 2 / 3)};
         
         return new java.awt.Polygon(xPoints, yPoints, 5);
+    }
+    
+    // TODO  ADJUST
+    private double parseMeasurement(JTextField feet, JTextField inches, JTextField num, JTextField den) {
+        double total = 0.0;
+        try {
+            if (!feet.getText().trim().isEmpty())
+                total += Integer.parseInt(feet.getText().trim()) * 12;
+            if (!inches.getText().trim().isEmpty())
+                total += Integer.parseInt(inches.getText().trim());
+        } catch (NumberFormatException e) {
+            return -1; // invalid
+        }
+
+        // Parse fraction
+        if (!num.getText().trim().isEmpty() && !den.getText().trim().isEmpty()) {
+            try {
+                int n = Integer.parseInt(num.getText().trim());
+                int d = Integer.parseInt(den.getText().trim());
+                if (d > 0) total += (double) n / d;
+            } catch (NumberFormatException ignored) {}
+        }
+        return total; // in inches
+    }
+    
+    // Set 4 fields from total inches
+    private void setMeasurement(double totalInches, JTextField feet, JTextField inches, JTextField num, JTextField den) {
+        if (totalInches < 0) {
+            feet.setText(""); inches.setText(""); num.setText(""); den.setText("");
+            return;
+        }
+
+        int wholeInches = (int) Math.floor(totalInches);
+        int ft = wholeInches / 12;
+        int in = wholeInches % 12;
+        double remainder = totalInches - wholeInches;
+
+        feet.setText(String.valueOf(ft));
+        inches.setText(String.valueOf(in));
+
+        // Simple fraction approximation: check common denominators up to 64
+        if (remainder == 0) {
+            num.setText("");
+            den.setText("");
+        } else {
+            int bestN = 1, bestD = 1;
+            double bestError = Math.abs(remainder - 1.0);
+            for (int d = 2; d <= 64; d++) {
+                int n = (int) Math.round(remainder * d);
+                if (n == 0) continue;
+                double error = Math.abs(remainder - (double) n / d);
+                if (error < bestError) {
+                    bestError = error;
+                    bestN = n;
+                    bestD = d;
+                }
+            }
+            num.setText(String.valueOf(bestN));
+            den.setText(String.valueOf(bestD));
+        }
     }
 }

@@ -85,12 +85,7 @@ public class DrawingPanel extends JPanel {
     
     private Polygon creerFormeRegulierePiece(Dimension dimension) {
         
-        // int sizeInPixels = DIMENSION_DEFAUT_PIECE_FEET * FACTEUR_CONVERSION_FEET_INCHES * DPI;
-        
         int taillePiecePouces = DIMENSION_DEFAUT_PIECE_FEET * FACTEUR_CONVERSION_FEET_INCHES;
-        
-        int width = dimension.width;
-        int height = dimension.height;
         
         int largeurEcranPouces = dimension.width / DPI;
         int longueurEcranPouces = dimension.height / DPI;

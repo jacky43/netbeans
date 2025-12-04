@@ -8,6 +8,7 @@ import java.awt.Graphics;
 import java.awt.Point;
 import java.awt.Polygon;
 import java.util.ArrayList;
+import java.awt.Font;
 
 public class MainDrawer {
 
@@ -44,6 +45,7 @@ public class MainDrawer {
         for (MeubleDTO meuble : p_meubles) {
             boolean estElementChauffant = "ELEMENT_CHAUFFANT".equals(meuble.getNom());
             Point position = meuble.getPosition();
+            
             if(estElementChauffant)
             {
                 g.setColor(Color.YELLOW);                
@@ -76,23 +78,41 @@ public class MainDrawer {
             }
             
             // TODO : Ajuster avec les nouvelles valeurs
-            if (meuble.estAvecDrain())
-            {
+            // Dessiner le drain
+            if (meuble.estAvecDrain()) {
                 int taille = meuble.getDiametreDrain();
-                
-                // TODO - NDH : Utiliser le centre du drain et ajuster les réfs.
-                int x = position.x + meuble.getLongueur() / 2;
-                int y = position.y - meuble.getLargeur() / 2 ;
-                
-                int xDrain = convertToPixels(x - (int) taille / 2) + origineAxes.x;
-                int yDrain = origineAxes.y - convertToPixels(y + (int) taille / 2);
-                
-                g.setColor(Color.RED);
-                g.fillOval(xDrain, yDrain, 
-                           convertToPixels(taille), convertToPixels(taille));
-                g.setColor(Color.BLACK);
-                g.drawOval(xDrain, yDrain, 
-                           convertToPixels(taille), convertToPixels(taille));
+                Point centreDrain = meuble.getCentreDrain();
+
+                if (centreDrain != null) {
+                    // centreDrain.x et centreDrain.y sont les coordonnées DANS le meuble
+                    // (0,0) = coin inférieur gauche du meuble
+
+                    // Position absolue du drain dans le système de coordonnées de la pièce
+                    int xDrainAbsolu = position.x + centreDrain.x;
+                    int yDrainAbsolu = position.y - meuble.getLongueur() + centreDrain.y;
+
+                    // Conversion en pixels pour l'affichage
+                    int xDrainPixels = convertToPixels(xDrainAbsolu) + origineAxes.x;
+                    int yDrainPixels = origineAxes.y - convertToPixels(yDrainAbsolu);
+
+                    // Centrer le cercle sur la position
+                    int xDrainCentre = xDrainPixels - convertToPixels(taille) / 2;
+                    int yDrainCentre = yDrainPixels - convertToPixels(taille) / 2;
+
+                    System.out.println("=== DESSIN DRAIN ===");
+                    System.out.println("Centre drain (relatif au meuble): " + centreDrain);
+                    System.out.println("Position meuble (coin supérieur gauche): " + position);
+                    System.out.println("Longueur meuble: " + meuble.getLongueur());
+                    System.out.println("Position absolue drain: (" + xDrainAbsolu + ", " + yDrainAbsolu + ")");
+                    System.out.println("Position écran (centre): (" + xDrainCentre + ", " + yDrainCentre + ")");
+
+                    g.setColor(Color.RED);
+                    g.fillOval(xDrainCentre, yDrainCentre,
+                            convertToPixels(taille), convertToPixels(taille));
+                    g.setColor(Color.BLACK);
+                    g.drawOval(xDrainCentre, yDrainCentre,
+                            convertToPixels(taille), convertToPixels(taille));
+                }
             }
             
             if (meuble.estSelectionne()) 
@@ -102,6 +122,39 @@ public class MainDrawer {
                     origineAxes.y - convertToPixels(position.y),
                     convertToPixels(meuble.getLargeur()),
                     convertToPixels(meuble.getLongueur()));
+            }
+            
+            if (!estElementChauffant) {
+                g.setColor(Color.BLACK);
+                g.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 12));
+                
+                int xTexte = convertToPixels(position.x) + origineAxes.x + convertToPixels(meuble.getLargeur()) + 5;
+                int yTexte = origineAxes.y - convertToPixels(position.y) + convertToPixels(meuble.getLongueur()) / 2;
+                
+                String nomAffiche = "";
+                switch(meuble.getNom()) {
+                    case "BAIN":
+                        nomAffiche = "Bain";
+                        break;
+                    case "DOUCHE":
+                        nomAffiche = "Douche";
+                        break;
+                    case "VANITE":
+                        nomAffiche = "Vanité";
+                        break;
+                    case "ARMOIRE":
+                        nomAffiche = "Armoire";
+                        break;
+                    case "PLACARD":
+                        nomAffiche = "Placard";
+                        break;
+                    case "TOILETTE":
+                        nomAffiche = "Toilette";
+                        break;
+                    default:
+                        nomAffiche = meuble.getNom();
+                }
+                g.drawString(nomAffiche, xTexte, yTexte);
             }
         }
     }
