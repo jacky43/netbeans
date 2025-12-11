@@ -224,15 +224,15 @@ public class MainDrawer {
              int xEcran = origineAxes.x + x;
              int yDebut = origineAxes.y - margePixels;
              int yFin = origineAxes.y -(longueurPixels - margePixels);
-             g.drawLine(xEcran, yDebut, xEcran, yFin);  
+             g2d.drawLine(xEcran, yDebut, xEcran, yFin);  
          }
          
          //dessiner ligne horizontale
          for(int y = margePixels; y <= longueurPixels - margePixels; y += espacementPixels){
-             int xEcran = origineAxes.y - y;
-             int yDebut = origineAxes.x + margePixels;
-             int yFin = origineAxes.x + (longueurPixels - margePixels);
-             g.drawLine(xEcran, yDebut, xEcran, yFin);  
+             int yEcran = origineAxes.y - y;
+             int xDebut = origineAxes.x + margePixels;
+             int xFin = origineAxes.x + (longueurPixels - margePixels);
+             g.drawLine(xDebut, yEcran, xFin, yEcran);  
          }
      }
     

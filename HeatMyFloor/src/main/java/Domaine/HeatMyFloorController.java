@@ -121,7 +121,7 @@ public class HeatMyFloorController {
       //  history.saveState(maPiece);
         
         ElementSelectionnable element = maPiece.ObtenirElementSelectionne();
-        if(element instanceof ElementChauffant){
+        if(element instanceof ElementChauffant || element instanceof Thermostat){
             if(nouvelleLargeur != null){
                 element.setLargeur(nouvelleLargeur);
             }
@@ -131,6 +131,10 @@ public class HeatMyFloorController {
             if(nouvellePosition != null){
                 nouvellePosition = maPiece.TrouverPositionSurMurLePlusProche(nouvellePosition, element.getLongueur(),element.getLargeur());
                 element.setPosition(nouvellePosition);
+                
+                if(element instanceof Thermostat){
+                    maPiece.SupprimerFilChauffant();
+                }
             }
             return true;
             
@@ -232,8 +236,8 @@ public class HeatMyFloorController {
     }
     
     // Méthodes pour le fil chauffant
-    public void TracerFilChauffant(int longueurMax) {
-        maPiece.TracerFilChauffant(longueurMax);
+    public void TracerFilChauffant(int longueurMax, int distanceMaxLigne) {
+        maPiece.TracerFilChauffant(longueurMax, distanceMaxLigne);
     }
     
     public Fil ObtenirFilChauffant() {

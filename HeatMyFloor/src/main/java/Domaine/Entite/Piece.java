@@ -194,20 +194,20 @@ public class Piece implements Cloneable {
         int y  = positionRelative.y;
         
         int distanceGauche = Math.abs(x - 0);
-        int distanceDroite = Math.abs(x - largeurPiece);
+        int distanceDroite = Math.abs(x - (largeurPiece - largeur));
         int distanceBas = Math.abs(y - longueur);
         int distanceHaut = Math.abs(y - hauteurPiece);
         
         int distanceMin = Math.min(Math.min(distanceGauche, distanceDroite), Math.min(distanceBas, distanceHaut));
         //TODO
         if(distanceMin == distanceGauche){
-            return new Point(0, Math.max(longueur, Math.min(distanceBas, distanceHaut)));
+            return new Point(0, Math.max(longueur, Math.min(y, hauteurPiece)));
         }else if(distanceMin == distanceDroite){
-            return new Point (largeurPiece, Math.max(longueur, Math.min(y, hauteurPiece)));
+            return new Point (largeurPiece - largeur, Math.max(longueur, Math.min(y, hauteurPiece)));
         }else if (distanceMin == distanceBas){
-            return new Point (Math.max(0, Math.min(x, largeurPiece)), longueur);
+            return new Point (Math.max(0, Math.min(x, largeurPiece - largeur)), longueur);
         }else{
-            return new Point (Math.max(0, Math.min(x, largeurPiece)), hauteurPiece);
+            return new Point (Math.max(0, Math.min(x, largeurPiece -largeur)), hauteurPiece);
         }
     }
      
@@ -313,9 +313,9 @@ public class Piece implements Cloneable {
     }
     
     // Méthodes pour le fil chauffant
-    public void TracerFilChauffant(int longueurMax) {
+    public void TracerFilChauffant(int longueurMax, int distanceMaxLigne) {
         if (thermostat != null && menbrane != null) {
-            TraceurFil traceur = new TraceurFil(menbrane, getMeubles(), elements);
+            TraceurFil traceur = new TraceurFil(menbrane, getMeubles(), elements, distanceMaxLigne);
             fil = traceur.tracerFilAutomatique(thermostat.getPosition(), longueurMax);
         }
     }

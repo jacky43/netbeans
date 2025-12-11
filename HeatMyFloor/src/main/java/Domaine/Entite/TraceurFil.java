@@ -17,12 +17,20 @@ public class TraceurFil {
      private Menbrane menbrane;
     private ArrayList<Meuble> meubles;
     private ArrayList<ElementChauffant> elementsChauffants;
-    private int distanceSecurite = 118; // 3 pouces
+    private int distanceSecurite = 3; // 3 pouces  
+    private static final int DISTANCE_MIN_DRAIN = 6; // 6 pouces minimum des drains
+    private static final int DISTANCE_MIN_TOILETTE = 6; // 6 pouces minimum du drain toilette
+    private int distanceMaxLigneDroite; // Distance max par segment de ligne droite
     
     public TraceurFil(Menbrane menbrane, ArrayList<Meuble> meubles, ArrayList<ElementSelectionnable> elements) {
+        this(menbrane, meubles, elements, Integer.MAX_VALUE);
+    }
+    
+    public TraceurFil(Menbrane menbrane, ArrayList<Meuble> meubles, ArrayList<ElementSelectionnable> elements, int distanceMaxLigne) {
         this.menbrane = menbrane;
         this.meubles = meubles;
         this.elementsChauffants = new ArrayList<>();
+        this.distanceMaxLigneDroite = distanceMaxLigne;
         if(elements != null){
             for(ElementSelectionnable el : elements){
                 if (el instanceof ElementChauffant elementChauffant){
@@ -31,6 +39,7 @@ public class TraceurFil {
             }
         }
     }
+
     
     // Vérifie si un point est valide (pas trop proche d'un meuble ou élément chauffant)
     public boolean estPointValide(Point point) {
@@ -41,6 +50,12 @@ public class TraceurFil {
             if (estTropProcheMeuble(point, meuble)) {
                 return false;
             }
+            // Vérifier distance de 6" avec les drains
+            if (meuble instanceof MeubleAvecDrain meubleAvecDrain) {
+                if (estTropProcheDrain(point, meubleAvecDrain)) {
+                    return false;
+                }
+            }
         }
         
         // Vérifier distance avec éléments chauffants
@@ -48,8 +63,7 @@ public class TraceurFil {
             if (estTropProcheElement(point, element)) {
                 return false;
             }
-        }
-        
+        }     
         return true;
     }
     
@@ -81,6 +95,29 @@ public class TraceurFil {
                point.y >= minY && point.y <= maxY;
     }
     
+    private boolean estTropProcheDrain(Point point, MeubleAvecDrain meuble) {
+        Point centreDrain = meuble.getCentreDrain();
+        if (centreDrain == null) {
+            return false;
+        }
+        
+        // Calculer position absolue du drain dans la pièce
+        Point posMeuble = meuble.getPosition();
+        int xDrainAbsolu = posMeuble.x + centreDrain.x;
+        int yDrainAbsolu = posMeuble.y - meuble.getLongueur() + centreDrain.y;
+        
+        // Distance minimale selon le type de meuble
+        int distanceMin = "TOILETTE".equals(meuble.getNom()) ? DISTANCE_MIN_TOILETTE : DISTANCE_MIN_DRAIN;
+        
+        // Calculer distance euclidienne
+        double distance = Math.sqrt(
+            Math.pow(point.x - xDrainAbsolu, 2) + 
+            Math.pow(point.y - yDrainAbsolu, 2)
+        );
+        
+        return distance < distanceMin;
+    }
+    
     // Algorithme de tracé automatique (serpentin)
     public Fil tracerFilAutomatique(Point thermostat, int longueurMax) {
         Fil fil = new Fil(thermostat, longueurMax);
@@ -94,6 +131,18 @@ public class TraceurFil {
             }
         }
         
+        if(intersectionsValides.isEmpty()){
+            return fil;
+        }
+        //trouver le point de la grille le plus proche du thermostat
+        Point pointDepart = trouverPointLePlusProche(thermostat, intersectionsValides);
+        
+        //Connecter le thermostat au premier point 
+        if(pointDepart != null && estSegmentValide(thermostat, pointDepart)){
+            fil.ajouterSegment(pointDepart);
+            intersectionsValides.remove(pointDepart);
+        }
+        
         // Trier par ligne (y) puis par colonne (x) pour créer un serpentin
         Collections.sort(intersectionsValides, (Point p1, Point p2) -> {
             if (p1.y != p2.y) {
@@ -103,7 +152,7 @@ public class TraceurFil {
         });
         
         // Tracer en serpentin
-        Point pointActuel = thermostat;
+        //Point pointActuel = thermostat;
         int ligneActuelle = -1;
         boolean directionDroite = true;
         
@@ -117,11 +166,8 @@ public class TraceurFil {
                         Collections.reverse(ligneCourante);
                     }
                     
-                    for (Point p : ligneCourante) {
-                        if (!fil.ajouterSegment(p)) {
-                            return fil; // Longueur maximale atteinte
-                        }
-                        pointActuel = p;
+                    if(!ajouterLigneAvecContrainte(fil, ligneCourante)){
+                        return fil;
                     }
                     
                     directionDroite = !directionDroite;
@@ -140,16 +186,109 @@ public class TraceurFil {
             if (!directionDroite) {
                 Collections.reverse(ligneCourante);
             }
-            
-            for (Point p : ligneCourante) {
-                if (!fil.ajouterSegment(p)) {
-                    break;
-                }
-            }
+            ajouterLigneAvecContrainte(fil, ligneCourante);
         }
         
         return fil;
     }
+    
+    private Point trouverPointLePlusProche(Point reference, ArrayList<Point> points){
+        if(points.isEmpty()){return null;}
+        
+        Point plusProche = points.get(0);
+        int distanceMin = calculerDistance(reference, plusProche);
+        
+        for(Point p: points){
+            int distance = calculerDistance(reference, p);
+            if(distance < distanceMin){
+                distanceMin = distance;
+                plusProche = p;
+            }
+        }
+        return plusProche;
+    }
+    
+    private boolean ajouterLigneAvecContrainte(Fil fil, ArrayList<Point> ligne) {
+        if (ligne.isEmpty()) {
+            return true;
+        }
+        
+        Point dernierPoint = fil.getChemin().get(fil.getChemin().size() - 1);
+        
+        for (Point p : ligne) {
+            // Vérifier si le segment respecte la distance max
+            int distance = calculerDistance(dernierPoint, p);
+            
+            if (distance > distanceMaxLigneDroite) {
+                // Segment trop long, arrêter ici
+                continue;
+            }
+            //verifie que le segment entre le dernier point et p ne traverse aucun obstacle
+            if (!estSegmentValide(dernierPoint,p)) {
+                continue; // Longueur maximale atteinte
+            }
+            
+            if (!fil.ajouterSegment(p)) {
+                return false; // Longueur maximale atteinte
+            }
+            dernierPoint = p;
+        }
+        
+        return true;
+    }
+    
+    private boolean estSegmentValide(Point p1, Point p2){
+        
+        if(meubles.isEmpty() && elementsChauffants.isEmpty()){
+            return true;
+        }
+        
+          if(!estPointLibreObstacles(p2)){
+            return false;
+        }
+        //verifier plusiers point intermediaire
+        int steps = Math.max(Math.abs(p2.x - p1.x), Math.abs(p2.y - p1.y));
+        if(steps <= 6){
+            return true;
+        }
+        
+        int nbEchantillons = steps / 3;
+        for(int i = 0; i <= nbEchantillons; i++){
+            double ratio = (double) i / steps;
+            int x = (int) Math.round(p1.x + ratio * (p2.x - p1.x));
+            int y = (int) Math.round(p1.y + ratio * (p2.y - p1.y));
+            
+            if(!estPointLibreObstacles(new Point(x, y))){
+                return false;
+            }
+        }
+        return true;
+    }
+    
+     private boolean estPointLibreObstacles(Point point){
+         for(Meuble meuble : meubles){
+             if(estTropProcheMeuble(point, meuble)){
+                 return false;
+             }
+             
+             if(meuble instanceof MeubleAvecDrain meubleAvecDrain){
+                 if(estTropProcheMeuble(point, meubleAvecDrain)){
+                 return false;
+                }
+             }
+         }
+          for(ElementChauffant element : elementsChauffants){
+             if(estTropProcheElement(point, element)){
+                 return false;
+             }
+         }
+          return true;
+    }
+    
+    private int calculerDistance(Point p1, Point p2) {
+        return (int) Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+    }
+
     
     public int getDistanceSecurite() {
         return distanceSecurite;

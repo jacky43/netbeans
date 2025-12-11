@@ -118,6 +118,10 @@ public class MainWindow extends javax.swing.JFrame {
     private final int DPI = 6;
     private final int FACTEUR_CONVERSION_FEET_INCHES = 12;
     private final int DIMENSION_DEFAUT_PIECE_FEET = 10;
+    private static final int ESPACEMENT_MENBRANE_POUCES = 3;
+    private static final double POUCES_PAR_METRE = 39.3701;
+    private static final int DISTANCE_SECURITE_METRES = 3;
+    private static final int MARGE_MENBRANE_POUCES = (int)Math.round(DISTANCE_SECURITE_METRES * POUCES_PAR_METRE);
     
     private double zoomFactor = 1.0;
     private final double ZOOM_INCREMENT = 0.1;
@@ -1543,7 +1547,7 @@ JPanel row(String label, JTextField ft, JTextField in, JTextField num, JTextFiel
         }
         
         // Initialiser la membrane avec espacement de 6 pouces et marge de 3 pouces
-        controller.InitialiserMenbrane(6, 118);
+        controller.InitialiserMenbrane(6, 3);
         rafraichirVue();
     }
     
@@ -1572,9 +1576,53 @@ JPanel row(String label, JTextField ft, JTextField in, JTextField num, JTextFiel
             return;
         }
         
-        // Tracer le fil chauffant avec une longueur maximale de 500 pouces
-        controller.TracerFilChauffant(315);
+        // Demander la longueur maximale du fil
+        String longueurInput = javax.swing.JOptionPane.showInputDialog(
+            this,
+            "Longueur maximale du fil (en pieds) :",
+            "25"
+        );
+        if (longueurInput == null || longueurInput.trim().isEmpty()) {
+            return;
+        }
+        
+        int longueurMaxPouces;
+        try {
+            double longueurPieds = Double.parseDouble(longueurInput);
+            longueurMaxPouces = (int) Math.round(longueurPieds * FACTEUR_CONVERSION_FEET_INCHES);
+        } catch (NumberFormatException e) {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                "Valeur invalide pour la longueur.",
+                "Erreur",
+                javax.swing.JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        // Demander la distance maximale par ligne droite
+        String distanceInput = javax.swing.JOptionPane.showInputDialog(
+            this,
+            "Distance maximale par ligne droite (en pieds) :",
+            "10"
+        );
+        if (distanceInput == null || distanceInput.trim().isEmpty()) {
+            return;
+        }
+        
+        int distanceMaxPouces;
+        try {
+            double distancePieds = Double.parseDouble(distanceInput);
+            distanceMaxPouces = (int) Math.round(distancePieds * FACTEUR_CONVERSION_FEET_INCHES);
+        } catch (NumberFormatException e) {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                "Valeur invalide pour la distance.",
+                "Erreur",
+                javax.swing.JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        controller.TracerFilChauffant(longueurMaxPouces, distanceMaxPouces);
         rafraichirVue();
+
     }
 
 }
