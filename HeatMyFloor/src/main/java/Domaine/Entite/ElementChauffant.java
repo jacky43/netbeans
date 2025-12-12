@@ -3,9 +3,10 @@ package Domaine.Entite;
 
 import Domaine.DTO.ElementChauffantDTO;
 import java.awt.Point;
+import java.io.Serializable;
 import java.util.UUID;
 
-public class ElementChauffant implements ElementSelectionnable {
+public class ElementChauffant implements ElementSelectionnable , Serializable {
     private Point position;
     private int longueur;
     private int largeur;

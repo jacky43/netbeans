@@ -9,12 +9,15 @@ import Domaine.Entite.Meuble;
 import Domaine.Entite.Piece;
 import Domaine.Entite.ElementSelectionnable;
 import Domaine.Entite.Fil;
-import Domaine.Entite.Menbrane;
+import Domaine.Entite.Membrane;
 import Domaine.Entite.MeubleAvecDrain;
 import Domaine.Entite.MeubleSansDrain;
 import Domaine.Entite.Thermostat;
 import java.awt.Point;
 import java.awt.Polygon;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 
 
@@ -218,11 +221,11 @@ public class HeatMyFloorController {
     }
     
     // Méthodes pour la membrane
-    public void InitialiserMenbrane(int espacement, int marge) {
-        maPiece.InitialiserMenbrane(espacement, marge);
+    public void InitialiserMembrane(int espacement, int marge) {
+        maPiece.InitialiserMembrane(espacement, marge);
     }
     
-    public Menbrane ObtenirMenbrane() {
+    public Membrane ObtenirMembrane() {
         return maPiece.getMembrane();
     }
     
@@ -246,6 +249,72 @@ public class HeatMyFloorController {
     
     public void SupprimerFilChauffant() {
         maPiece.SupprimerFilChauffant();
+    }
+
+    public void SauvegarderPiece(String path) throws IOException
+    {
+        maPiece.Sauvegarder(path);
+    }
+    public void ImporterPiece(String path) throws IOException, FileNotFoundException, ClassNotFoundException
+    {
+        maPiece.importer(path);
+    }
+    
+    // Active ou désactive la régénération automatique du fil Quand activée, le fil sera recalculé après chaque modification (ajout/suppression/modification d'élément)
+
+    public void ActiverAutoRegenerationFil(boolean activer) {
+        maPiece.setAutoRegenerationFil(activer);
+    }
+    
+    public boolean EstAutoRegenerationActive() {
+        return maPiece.estAutoRegenerationActive();
+    }
+    
+    //Trouve l'intersection de la membrane la plus proche d'une position donnée
+    public Point TrouverIntersectionProche(Point position, int tolerance) {
+        Membrane membrane = maPiece.getMembrane();
+        if (membrane == null) {
+            return null;
+        }
+        
+        ArrayList<Point> intersections = membrane.ObtenirIntersections();
+        Point plusProche = null;
+        double distanceMin = Double.MAX_VALUE;
+        
+        for (Point intersection : intersections) {
+            double distance = Math.sqrt(
+                Math.pow(intersection.x - position.x, 2) + 
+                Math.pow(intersection.y - position.y, 2)
+            );
+            
+            if (distance < distanceMin && distance <= tolerance) {
+                distanceMin = distance;
+                plusProche = intersection;
+            }
+        }
+        
+        return plusProche;
+    }
+    
+    //Translate une intersection de la membrane vers une nouvelle position
+
+    public boolean TranslaterIntersection(Point intersectionOriginale, Point nouvellePosition) {
+        Membrane membrane = maPiece.getMembrane();
+        if (membrane == null) {
+            return false;
+        }
+        
+        // Trouver le point de grille le plus proche de l'intersection originale
+        Point pointGrille = membrane.trouverIntersectionLaPlusProche(intersectionOriginale);
+        
+        // Translater ce point vers la nouvelle position
+        boolean succes = membrane.translaterIntersection(pointGrille, nouvellePosition);
+        
+        if (succes) {
+            System.out.println("Translation réussie: " + pointGrille + " -> " + nouvellePosition);
+        }
+        
+        return succes;
     }
 
 }

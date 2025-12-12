@@ -1,19 +1,14 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
+
 package Domaine.Entite;
 
 import Domaine.DTO.ElementChauffantDTO;
 import Domaine.DTO.ThermostatDTO;
 import java.awt.Point;
+import java.io.Serializable;
 import java.util.UUID;
 
-/**
- *
- * @author jacky
- */
-public class Thermostat implements ElementSelectionnable{
+
+public class Thermostat implements ElementSelectionnable , Serializable{
     
     private Point position;
     private int longueur;

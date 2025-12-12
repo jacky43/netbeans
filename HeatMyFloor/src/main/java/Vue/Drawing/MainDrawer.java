@@ -3,7 +3,7 @@ package Vue.Drawing;
 import Domaine.DTO.MeubleDTO;
 import Domaine.DTO.PieceDTO;
 import Domaine.Entite.Fil;
-import Domaine.Entite.Menbrane;
+import Domaine.Entite.Membrane;
 import Domaine.Entite.Thermostat;
 import Domaine.HeatMyFloorController;
 import java.awt.BasicStroke;
@@ -47,9 +47,9 @@ public class MainDrawer {
         g.setColor(Color.BLACK);
         g.drawPolygon(formeConvertie);
         // Dessiner la membrane si elle existe
-        Menbrane menbrane = controller.ObtenirMenbrane();
-        if (menbrane != null) {
-            drawMenbrane(g, menbrane);
+        Membrane membrane = controller.ObtenirMembrane();
+        if (membrane != null) {
+            drawMembrane(g, membrane);
         }
         
         // Dessiner le fil chauffant
@@ -207,17 +207,17 @@ public class MainDrawer {
         return new Polygon(xPoints, yPoints, p_poly.npoints);
     }
     
-         private void drawMenbrane(Graphics g, Menbrane menbarne){
+         private void drawMembrane(Graphics g, Membrane membrane){
          
          Graphics2D g2d = (Graphics2D) g;
-         g2d.setColor(Color.red);
+         g2d.setColor(new Color(255, 162, 96));
          g2d.setStroke(new BasicStroke(1.0f));
 
          
-         int largeurPixels = convertToPixels(menbarne.getLargeurPiece());
-         int longueurPixels =  convertToPixels(menbarne.getLongueurPiece());
-         int espacementPixels =  convertToPixels(menbarne.getEspacement());
-         int margePixels =  convertToPixels(menbarne.getMargeContour());
+         int largeurPixels = convertToPixels(membrane.getLargeurPiece());
+         int longueurPixels =  convertToPixels(membrane.getLongueurPiece());
+         int espacementPixels =  convertToPixels(membrane.getEspacement());
+         int margePixels =  convertToPixels(membrane.getMargeContour());
          
          //dessiner ligne verticale
          for(int x = margePixels; x <= largeurPixels - margePixels; x += espacementPixels){
@@ -241,7 +241,7 @@ public class MainDrawer {
          if(chemin.size() < 2) return;
          
          Graphics2D g2d = (Graphics2D) g;
-         g2d.setColor(Color.red);
+         g2d.setColor(new Color(219, 145, 75));
          g2d.setStroke(new BasicStroke(2.0f));
          
          for(int i = 0; i < chemin.size() - 1; i++){
@@ -264,7 +264,7 @@ public class MainDrawer {
         int largeurPixels = convertToPixels(thermostat.getLargeur());
         int longueurPixels = convertToPixels(thermostat.getLongueur());
         
-        g.setColor(Color.GREEN);
+        g.setColor(new Color(129, 101, 22));
         g.fillRect(x, y, largeurPixels, longueurPixels);
         
         Graphics2D g2d = (Graphics2D) g;

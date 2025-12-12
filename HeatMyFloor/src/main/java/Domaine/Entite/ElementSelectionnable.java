@@ -3,7 +3,7 @@ package Domaine.Entite;
 import java.awt.Point;
 import java.util.UUID;
 
-public interface ElementSelectionnable {
+public interface ElementSelectionnable  {
     UUID getId();
     Point getPosition();
     void setPosition(Point newPosition);

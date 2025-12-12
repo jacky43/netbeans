@@ -7,17 +7,25 @@ import Domaine.DTO.ThermostatDTO;
 import java.awt.Point;
 import java.awt.Polygon;
 import java.awt.Rectangle;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.UUID;
+import java.io.Serializable;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 
-public class Piece implements Cloneable {
+public class Piece implements Cloneable, Serializable {
     
     private Polygon forme;
   
     private ArrayList<ElementSelectionnable> elements;
     private ArrayList<ElementChauffant> elementChauffants;
-    private Menbrane menbrane;
+    private Membrane menbrane;
     private Thermostat thermostat;
     private Fil fil;
     private int largeurReellePouces;
@@ -53,11 +61,15 @@ public class Piece implements Cloneable {
             largeurReellePouces = (int) Math.round(bounds.getWidth());
             longueurReellePouces = (int) Math.round(bounds.getHeight());
         }
+        //regener le fil
+        regenererFilSiNecessaire();
     }
     
      public void DefinirDimensionReeles(int largeurPouces, int longueurPouces){
        this.largeurReellePouces = largeurPouces;
        this.longueurReellePouces = longueurPouces;
+       //regener le fil
+        regenererFilSiNecessaire();
     }
     
     public int getLargeurPouces(){
@@ -89,6 +101,9 @@ public class Piece implements Cloneable {
             elements.add(new MeubleAvecDrain(dto));
         else
             elements.add(new MeubleSansDrain(dto));
+        
+        //regener le fil
+        regenererFilSiNecessaire();
     }
  
     public ElementSelectionnable SelectionnerElement(Point p_position)
@@ -130,6 +145,8 @@ public class Piece implements Cloneable {
             ElementSelectionnable element = iterator.next();
             if(element.getId().equals(id)){
                 iterator.remove();
+                //regener le fil
+                regenererFilSiNecessaire();
                 return true;
             }
         }
@@ -155,6 +172,9 @@ public class Piece implements Cloneable {
             selection.setLargeur(nouvelleLargeur);
         if(nouvelleLongueur != null)
             selection.setLongueur(nouvelleLongueur);
+        
+        //regener le fil
+        regenererFilSiNecessaire();
         return true;
     }
     
@@ -288,17 +308,19 @@ public class Piece implements Cloneable {
     }
     
      // Méthodes pour la membrane
-    public void InitialiserMenbrane(int espacement, int marge) {
+    public void InitialiserMembrane(int espacement, int marge) {
         if(forme == null) return;
         Rectangle bounds = forme.getBounds();
         int largeur = largeurReellePouces > 0 ? largeurReellePouces : (int) Math.round(bounds.getWidth());
         int longueur = longueurReellePouces > 0 ? longueurReellePouces : (int) Math.round(bounds.getHeight());
-        //menbrane = new Menbrane((int)bounds.getWidth(), (int)bounds.getHeight(), espacement, marge);
-        menbrane = new Menbrane(largeur, longueur, espacement, marge);
+        //menbrane = new Membrane((int)bounds.getWidth(), (int)bounds.getHeight(), espacement, marge);
+        menbrane = new Membrane(largeur, longueur, espacement, marge);
         
+        //regener le fil
+        regenererFilSiNecessaire();
     }
     
-    public Menbrane getMembrane() {
+    public Membrane getMembrane() {
         return menbrane;
     }
     
@@ -313,12 +335,46 @@ public class Piece implements Cloneable {
     }
     
     // Méthodes pour le fil chauffant
+    private int longueurMaxFil = 0;
+    private int distanceMaxLigneFil = Integer.MAX_VALUE;
+    private boolean autoRegenerationActive = true;
+    
     public void TracerFilChauffant(int longueurMax, int distanceMaxLigne) {
         if (thermostat != null && menbrane != null) {
+            this.longueurMaxFil = longueurMax;
+            this.distanceMaxLigneFil = distanceMaxLigne;
             TraceurFil traceur = new TraceurFil(menbrane, getMeubles(), elements, distanceMaxLigne);
             fil = traceur.tracerFilAutomatique(thermostat.getPosition(), longueurMax);
         }
     }
+
+    //Active ou désactive la régénération automatique du fil Quand activée, le fil sera recalculé après chaque modification
+    public void setAutoRegenerationFil(boolean activer) {
+        this.autoRegenerationActive = activer;
+    }
+    
+    public boolean estAutoRegenerationActive() {
+        return autoRegenerationActive;
+    }
+    
+    //Régénère automatiquement le fil si l'auto-régénération est active
+    private void regenererFilSiNecessaire() {
+        if (!autoRegenerationActive ) {
+            return;
+        }
+         if (thermostat == null ) {
+            return;
+        }
+        if (menbrane == null ) {
+            return;
+        }
+        if (longueurMaxFil <= 0) {
+            return;
+        }
+        TraceurFil traceur = new TraceurFil(menbrane, getMeubles(), elements, distanceMaxLigneFil);
+        fil = traceur.tracerFilAutomatique(thermostat.getPosition(), longueurMaxFil);
+    }
+
     
     public Fil getFilChauffant() {
         return fil;
@@ -328,4 +384,31 @@ public class Piece implements Cloneable {
         fil = null;
     }
 
+    public void Sauvegarder(String path) throws IOException
+    {
+        
+        FileOutputStream fileout = new FileOutputStream(path + "\\piece.ser");
+        ObjectOutputStream out = new ObjectOutputStream(fileout);
+        out.writeObject(this);
+        out.close();
+        fileout.close();     
+    }
+    
+    public void importer(String path) throws IOException, ClassNotFoundException
+    {
+        Piece p = null;
+        FileInputStream filein = new FileInputStream(path);
+        ObjectInputStream in = new ObjectInputStream(filein);
+        p = (Piece) in.readObject();
+        in.close();
+        filein.close();
+        this.elementChauffants = p.elementChauffants;
+        this.elements = p.elements;
+        this.forme = p.forme;
+        this.thermostat = p.thermostat;
+        this.fil = p.fil;
+        this.menbrane = p.menbrane;
+        this.largeurReellePouces = p.largeurReellePouces;
+        this.longueurReellePouces = p.longueurReellePouces;
+    }
 }

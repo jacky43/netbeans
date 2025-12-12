@@ -2,9 +2,10 @@ package Domaine.Entite;
 
 import Domaine.DTO.MeubleDTO;
 import java.awt.Point;
+import java.io.Serializable;
 import java.util.UUID;
 
-public abstract class Meuble implements ElementSelectionnable {
+public abstract class Meuble implements ElementSelectionnable, Serializable {
     private Point position;
     private int longueur;
     private int largeur;

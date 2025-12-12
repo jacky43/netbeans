@@ -5,13 +5,19 @@ import Domaine.DTO.ElementSelectionnableDTO;
 import Domaine.DTO.MeubleDTO;
 import Domaine.DTO.ThermostatDTO;
 import Domaine.Entite.ElementSelectionnable;
+import Domaine.Entite.MeubleAvecDrain;
 import Domaine.HeatMyFloorController;
 import java.awt.FlowLayout;
 import java.awt.Point;
 import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.IOException;
 import java.util.Set;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -41,6 +47,13 @@ public class MainWindow extends javax.swing.JFrame {
     private Point dragStartPoint = null;
     private Point elementStartPosition = null;
     
+    // Mode translation de la membrane
+    private boolean modeTranslationActive = false;
+    private boolean isDraggingIntersection = false;
+    private Point intersectionOriginale = null;
+    private Point intersectionDragStart = null;
+
+   
 // LARGEUR ELEMENT SELECTIONNE
     private javax.swing.JLabel largeurJLabel;
     private javax.swing.JTextField largeurPiedJText, largeurPouceJText, largeurFractionJText, largeurElementNumJText, largeurElementDenJText;
@@ -76,6 +89,7 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JButton tracerFilButton ;
     private javax.swing.JButton supprimerMeubleButton;
     private javax.swing.JButton modifierMeubleButton;
+    private javax.swing.JButton translationMembraneButton;
     private javax.swing.JButton undoButton;
     private javax.swing.JButton zoomInButton;
     private javax.swing.JButton zoomOutButton;
@@ -109,6 +123,8 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JButton nouvellePieceJButton;
     private javax.swing.JLabel typePieceJLabel;
     private javax.swing.JComboBox<String> typePieceComboBox;
+    
+    private javax.swing.JLabel ErreurJLabel;
     
     private final int DIAMETRE_DRAIN_POUCES = 3;
     private final int LONGUEUR_INITIALE_MEUBLE_POUCES = 36;
@@ -168,6 +184,7 @@ public class MainWindow extends javax.swing.JFrame {
         ajoutThermostatButton = new javax.swing.JButton();
         activerMembraneButton = new javax.swing.JButton();
         tracerFilButton = new javax.swing.JButton();
+        translationMembraneButton = new javax.swing.JButton();
         supprimerMeubleButton = new javax.swing.JButton();
         modifierMeubleButton = new javax.swing.JButton();
         longueurPiedJText = new javax.swing.JTextField();
@@ -218,6 +235,8 @@ public class MainWindow extends javax.swing.JFrame {
         typePieceJLabel = new javax.swing.JLabel();
         typePieceComboBox = new javax.swing.JComboBox<>();
         
+        
+        ErreurJLabel = new javax.swing.JLabel();       
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         
         mainPanel.setLayout(new java.awt.BorderLayout());
@@ -293,6 +312,12 @@ public class MainWindow extends javax.swing.JFrame {
         });
         buttonTopPanel.add(tracerFilButton);
 
+        translationMembraneButton.setText("Translation Membrane");
+        translationMembraneButton.addActionListener((java.awt.event.ActionEvent evt) -> {
+            toggleModeTranslation();
+        });
+        buttonTopPanel.add(translationMembraneButton);
+
         
         supprimerMeubleButton.setText("Supprimer élément sélectionné");
         supprimerMeubleButton.addActionListener((java.awt.event.ActionEvent evt) -> {
@@ -311,17 +336,26 @@ public class MainWindow extends javax.swing.JFrame {
         
         mainPanel.add(buttonTopPanel, java.awt.BorderLayout.NORTH);
         
-        InformationZoneBottomPanel.setPreferredSize(new java.awt.Dimension(1000, 100));
-        javax.swing.GroupLayout InformationZoneBottomPanelLayout = new javax.swing.GroupLayout(InformationZoneBottomPanel);
-        InformationZoneBottomPanel.setLayout(InformationZoneBottomPanelLayout);
-        InformationZoneBottomPanelLayout.setHorizontalGroup(
-            InformationZoneBottomPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 1000, Short.MAX_VALUE)
-        );
-        InformationZoneBottomPanelLayout.setVerticalGroup(
-            InformationZoneBottomPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 100, Short.MAX_VALUE)
-        );
+       InformationZoneBottomPanel.setPreferredSize(new java.awt.Dimension(1000, 100));
+javax.swing.GroupLayout InformationZoneBottomPanelLayout = new javax.swing.GroupLayout(InformationZoneBottomPanel);
+InformationZoneBottomPanel.setLayout(InformationZoneBottomPanelLayout);
+
+InformationZoneBottomPanelLayout.setHorizontalGroup(
+    InformationZoneBottomPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+        .addGroup(InformationZoneBottomPanelLayout.createSequentialGroup()
+            .addContainerGap()
+            .addComponent(ErreurJLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 980, Short.MAX_VALUE)
+            .addContainerGap()
+        )
+);
+InformationZoneBottomPanelLayout.setVerticalGroup(
+    InformationZoneBottomPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+        .addGroup(InformationZoneBottomPanelLayout.createSequentialGroup()
+            .addContainerGap()
+            .addComponent(ErreurJLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 80, Short.MAX_VALUE)
+            .addContainerGap()
+        )
+);
         
         mainPanel.add(InformationZoneBottomPanel, java.awt.BorderLayout.SOUTH);
         
@@ -359,7 +393,7 @@ public class MainWindow extends javax.swing.JFrame {
         drawingPanel.addMouseWheelListener((java.awt.event.MouseWheelEvent evt) -> {
             drawingPanelMouseWheelMoved(evt);
         });
-        
+               
 //        longueurJLabel.setText("Longueur");
 //        LongueurPiedsJLabel.setText("ft");
 //        LongueurPouceJLabel.setText("in");
@@ -711,24 +745,37 @@ choixRightPanelLayout.setVerticalGroup(
         
         fichierMenu.setText("Fichier");
         
-        nouvelleModelisationMenu.setText("Nouvelle modélisation");
+//        nouvelleModelisationMenu.setText("Nouvelle modélisation");
         
-        pieceReguliereItem.setText("Pièce regulière");
-        nouvelleModelisationMenu.add(pieceReguliereItem);
+//        pieceReguliereItem.setText("Pièce regulière");
+//        nouvelleModelisationMenu.add(pieceReguliereItem);
+//        
+//        pieceIrreguliereItem.setText("Pièce irrégulière");
+//        nouvelleModelisationMenu.add(pieceIrreguliereItem);
         
-        pieceIrreguliereItem.setText("Pièce irrégulière");
-        nouvelleModelisationMenu.add(pieceIrreguliereItem);
-        
-        fichierMenu.add(nouvelleModelisationMenu);
+//        fichierMenu.add(nouvelleModelisationMenu);
         
         sauvegarderItem.setText("Sauvegarder");
         fichierMenu.add(sauvegarderItem);
         
+    sauvegarderItem.addActionListener(new ActionListener() {
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        SauvegarderFichier();
+    }
+});    
         exporterItem.setText("Exporter");
         fichierMenu.add(exporterItem);
         
         importerItem.setText("Importer");
         fichierMenu.add(importerItem);
+        
+        importerItem.addActionListener(new ActionListener() {
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        ImporterFichier();
+    }
+});    
         
         mainMenuBar.add(fichierMenu);
         
@@ -846,6 +893,19 @@ JPanel row(String label, JTextField ft, JTextField in, JTextField num, JTextFiel
         Point positionSouris = e.getPoint();
         Point positionMonde = screenToWorld(positionSouris);
         
+        // Mode translation: détecter clic sur une intersection
+        if (modeTranslationActive) {
+            Point intersectionProche = controller.TrouverIntersectionProche(positionMonde, 5); // Tolérance de 5 pouces
+            if (intersectionProche != null) {
+                isDraggingIntersection = true;
+                intersectionOriginale = intersectionProche;
+                intersectionDragStart = positionSouris;
+                drawingPanel.setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.HAND_CURSOR));
+                System.out.println("Début translation intersection: " + intersectionOriginale);
+                return;
+            }
+        }
+    
         Object selection = controller.SelectionnerElement(positionMonde);
         
         if (selection instanceof ElementSelectionnableDTO) {
@@ -862,6 +922,19 @@ JPanel row(String label, JTextField ft, JTextField in, JTextField num, JTextFiel
     }
     
     private void drawingPanelMouseDragged(java.awt.event.MouseEvent e){ 
+        
+        // Mode translation d'intersection
+        if (isDraggingIntersection && intersectionOriginale != null && intersectionDragStart != null) {
+            Point positionActuelle = e.getPoint();
+            Point nouvellePositionMonde = screenToWorld(positionActuelle);
+            
+            // Translater l'intersection dans le controller
+            controller.TranslaterIntersection(intersectionOriginale, nouvellePositionMonde);
+            rafraichirVue();
+            return;
+        }
+        
+        //mode normal deplacement elements
         if (!isDragging || dragStartPoint == null || elementStartPosition == null) {
             return;
         }
@@ -894,6 +967,21 @@ JPanel row(String label, JTextField ft, JTextField in, JTextField num, JTextFiel
     }
     
     private void drawingPanelMouseReleased(java.awt.event.MouseEvent e) { 
+        
+        //mode translation intersecrtion
+        if (isDraggingIntersection) {
+            isDraggingIntersection = false;
+            intersectionOriginale = null;
+            intersectionDragStart = null;
+            
+            drawingPanel.setCursor(java.awt.Cursor.getDefaultCursor());
+            
+            System.out.println("Fin translation intersection");
+            rafraichirVue();
+            return;
+        }
+
+        //mode normal deplacement
         if (isDragging) {
             isDragging = false;
             dragStartPoint = null;
@@ -1127,7 +1215,7 @@ JPanel row(String label, JTextField ft, JTextField in, JTextField num, JTextFiel
     if (meubleDto != null && MEUBLES_AVEC_DRAIN.contains(meubleDto.getNom())) {
         ElementSelectionnable element = controller.ObtenirElementSelectionneDirect();
         
-        if (element instanceof Domaine.Entite.MeubleAvecDrain meubleAvecDrain) {
+        if (element instanceof MeubleAvecDrain meubleAvecDrain) {
             // Modifier le diamètre du drain
             String diamText = diametrePiedJText.getText().trim();
             String diamTextPouce = diametrePouceJText.getText().trim();
@@ -1159,14 +1247,14 @@ JPanel row(String label, JTextField ft, JTextField in, JTextField num, JTextFiel
                     try {
                         drainX += Integer.parseInt(drainXPiedText) * FACTEUR_CONVERSION_FEET_INCHES;
                     } catch (NumberFormatException ex) {
-                        System.err.println("Erreur parse drain X pieds");
+                        afficherErreur("Erreur parse drain X pieds");
                     }
                 }
                 if (!drainXPouceText.isEmpty()) {
                     try {
                         drainX += Integer.parseInt(drainXPouceText);
                     } catch (NumberFormatException ex) {
-                        System.err.println("Erreur parse drain X pouces");
+                        afficherErreur("Erreur parse drain X pouces");
                     }
                 }
                 drainPosModifiee = true;
@@ -1182,14 +1270,14 @@ JPanel row(String label, JTextField ft, JTextField in, JTextField num, JTextFiel
                     try {
                         drainY += Integer.parseInt(drainYPiedText) * FACTEUR_CONVERSION_FEET_INCHES;
                     } catch (NumberFormatException ex) {
-                        System.err.println("Erreur parse drain Y pieds");
+                        afficherErreur("Erreur parse drain Y pieds");
                     }
                 }
                 if (!drainYPouceText.isEmpty()) {
                     try {
                         drainY += Integer.parseInt(drainYPouceText);
                     } catch (NumberFormatException ex) {
-                        System.err.println("Erreur parse drain Y pouces");
+                        afficherErreur("Erreur parse drain Y pouces");
                     }
                 }
             }
@@ -1205,7 +1293,7 @@ JPanel row(String label, JTextField ft, JTextField in, JTextField num, JTextFiel
                     System.out.println("Position drain mise à jour: " + nouveauCentre);
                     System.out.println("Vérification après set: " + meubleAvecDrain.getCentreDrain());
                 } else {
-                    System.out.println("Position drain hors limites du meuble");
+                    afficherErreur("Position drain hors limites du meuble");
                 }
             }
         }
@@ -1301,12 +1389,14 @@ JPanel row(String label, JTextField ft, JTextField in, JTextField num, JTextFiel
     
     private void afficherErreur(String message) {
         // TODO : A completer 
-        javax.swing.JOptionPane.showMessageDialog(
-            this,
-            message,
-            "Erreur",
-            javax.swing.JOptionPane.ERROR_MESSAGE
-        );
+//        javax.swing.JOptionPane.showMessageDialog(
+//            this,
+//            message,
+//            "Erreur",
+//            javax.swing.JOptionPane.ERROR_MESSAGE
+//        );
+    ErreurJLabel.setText("Erreur:" +message);
+
     }
     
     private void rafraichirVue() {
@@ -1324,11 +1414,11 @@ JPanel row(String label, JTextField ft, JTextField in, JTextField num, JTextFiel
         try {
                 valeur = Integer.parseInt(nb);
                 if (valeur <= 0 ) {
-                    System.err.println("Erreur : Dimensions doivent être > 0.");
+                    afficherErreur("Erreur : Dimensions doivent être > 0.");
                     return -1;
                 }
             } catch (NumberFormatException e) {
-                System.err.println("Erreur : Dimensions invalides.");
+               afficherErreur("Erreur : Dimensions invalides.");
                 return -1;
             }
         return valeur;
@@ -1547,7 +1637,7 @@ JPanel row(String label, JTextField ft, JTextField in, JTextField num, JTextFiel
         }
         
         // Initialiser la membrane avec espacement de 6 pouces et marge de 3 pouces
-        controller.InitialiserMenbrane(6, 3);
+        controller.InitialiserMembrane(6, 3);
         rafraichirVue();
     }
     
@@ -1568,7 +1658,7 @@ JPanel row(String label, JTextField ft, JTextField in, JTextField num, JTextFiel
             return;
         }
         
-        if (controller.ObtenirMenbrane() == null) {
+        if (controller.ObtenirMembrane() == null) {
             javax.swing.JOptionPane.showMessageDialog(this,
                 "Veuillez d'abord activer la membrane.",
                 "Erreur",
@@ -1623,6 +1713,79 @@ JPanel row(String label, JTextField ft, JTextField in, JTextField num, JTextFiel
         controller.TracerFilChauffant(longueurMaxPouces, distanceMaxPouces);
         rafraichirVue();
 
+    }
+
+    
+    private void SauvegarderFichier() 
+    {
+        JFileChooser chooser;
+        chooser = new JFileChooser();
+        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+       int returnvalue = chooser.showOpenDialog(null);
+      if (returnvalue == JFileChooser.APPROVE_OPTION) {
+
+        File directory = chooser.getSelectedFile();
+        
+        String path = directory.getAbsolutePath();
+        
+            try {
+                controller.SauvegarderPiece(path);
+            } catch (IOException ex) {
+                System.getLogger(MainWindow.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
+            }
+
+    }
+
+
+    }
+      private void ImporterFichier() 
+    {
+        JFileChooser chooser;
+        chooser = new JFileChooser();
+       int returnvalue = chooser.showOpenDialog(null);
+        if(returnvalue == JFileChooser.APPROVE_OPTION )
+        {
+           File file = chooser.getSelectedFile();
+           String path = file.getAbsolutePath();
+            try { 
+                controller.ImporterPiece(path);
+            } catch (IOException ex) {
+                System.getLogger(MainWindow.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
+            } catch (ClassNotFoundException ex) {
+                System.getLogger(MainWindow.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
+            }
+            rafraichirVue();
+        }
+    }
+    
+     /**
+     * Active/désactive le mode translation de la membrane
+     * En mode translation, l'utilisateur peut déplacer les intersections de la grille
+     */
+    private void toggleModeTranslation() {
+        if (controller.ObtenirMembrane() == null) {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                "Veuillez d'abord activer la membrane.",
+                "Erreur",
+                javax.swing.JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        modeTranslationActive = !modeTranslationActive;
+        
+        if (modeTranslationActive) {
+            translationMembraneButton.setText("✓ Translation Active");
+            translationMembraneButton.setBackground(new java.awt.Color(144, 238, 144)); // Vert clair
+            javax.swing.JOptionPane.showMessageDialog(this,
+                "Mode translation activé.\nCliquez et glissez les intersections de la membrane pour les déplacer.",
+                "Info",
+                javax.swing.JOptionPane.INFORMATION_MESSAGE);
+        } else {
+            translationMembraneButton.setText("Translation Membrane");
+            translationMembraneButton.setBackground(null);
+        }
+        
+        rafraichirVue();
     }
 
 }
