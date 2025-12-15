@@ -13,6 +13,8 @@ import Domaine.Entite.Membrane;
 import Domaine.Entite.MeubleAvecDrain;
 import Domaine.Entite.MeubleSansDrain;
 import Domaine.Entite.Thermostat;
+import Domaine.Entite.TraceurFil;
+import Domaine.Entite.GestionnaireCheminFil;
 import java.awt.Point;
 import java.awt.Polygon;
 import java.io.File;
@@ -26,6 +28,7 @@ public class HeatMyFloorController {
     private Piece maPiece;
     private boolean estInitialise;
     private ActionHistory history;
+    private GestionnaireCheminFil gestionnaireCheminFil;
     
     public HeatMyFloorController()
     {
@@ -139,11 +142,11 @@ public class HeatMyFloorController {
                     maPiece.SupprimerFilChauffant();
                 }
             }
-             // Régénérer le fil après modification d'élément chauffant ou thermostat
+            
+            // Régénérer le fil après modification d'élément chauffant ou thermostat
             // Note: On appelle ModifierElementSelectionne de Piece qui déclenche regenererFilSiNecessaire()
             maPiece.ModifierElementSelectionne(null, null, null);
             return true;
-            
         }
         return maPiece.ModifierElementSelectionne(nouvellePosition, nouvelleLargeur, nouvelleLongueur);
     }
@@ -315,7 +318,8 @@ public class HeatMyFloorController {
         
         if (succes) {
             System.out.println("Translation réussie: " + pointGrille + " -> " + nouvellePosition);
-             // IMPORTANT: Régénérer le fil car la grille a été modifiée
+            
+            // IMPORTANT: Régénérer le fil car la grille a été modifiée
             if (maPiece.getThermostat() != null && maPiece.getFilChauffant() != null) {
                 // Obtenir les paramètres du fil existant pour le recalcul
                 Fil filActuel = maPiece.getFilChauffant();
@@ -333,7 +337,7 @@ public class HeatMyFloorController {
         return succes;
     }
     
-  // ==================== SÉLECTION MANUELLE CHEMIN FIL ====================
+    // ==================== SÉLECTION MANUELLE CHEMIN FIL ====================
     
     /**
      * Sélectionne une intersection du chemin du fil
@@ -404,8 +408,7 @@ public class HeatMyFloorController {
         Fil nouveauFil = gestionnaireCheminFil.recalculerCheminVers(nouvelleDirection, longueurMax, 120);
         
         if (nouveauFil != null) {
-            maPiece.SupprimerFilChauffant();
-            maPiece.AjouterFilChauffant(nouveauFil);
+            maPiece.setFilChauffant(nouveauFil);
             
             // Réinitialiser le gestionnaire avec le nouveau fil
             TraceurFil traceur = new TraceurFil(
@@ -434,4 +437,6 @@ public class HeatMyFloorController {
             gestionnaireCheminFil.deselectionner();
         }
     }
+    
+
 }
