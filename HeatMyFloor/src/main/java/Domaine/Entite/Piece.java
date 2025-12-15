@@ -199,7 +199,8 @@ public class Piece implements Cloneable, Serializable {
         Point positionInitiale = new Point(0, dto.getLongueur());
         dto = new ElementChauffantDTO(positionInitiale, dto.getLongueur(),dto.getLargeur());
         elements.add(new ElementChauffant(dto));
-          // Régénérer le fil car un nouvel élément chauffant a été ajouté
+        
+        // Régénérer le fil car un nouvel élément chauffant a été ajouté
         regenererFilSiNecessaire();
     }
     
@@ -293,6 +294,11 @@ public class Piece implements Cloneable, Serializable {
             copie.forme = new Polygon(xPoints, yPoints, this.forme.npoints);
         }
         
+        // Clone dimensions réelles
+        copie.largeurReellePouces = this.largeurReellePouces;
+        copie.longueurReellePouces = this.longueurReellePouces;
+        
+        // Clone éléments
         copie.elements = new ArrayList<>();
         for (ElementSelectionnable element : this.elements) {
             if (element instanceof MeubleAvecDrain){
@@ -306,6 +312,24 @@ public class Piece implements Cloneable, Serializable {
                 copie.elements.add(new ElementChauffant(dto));
             }
         }
+        
+        // Clone membrane
+        if (this.menbrane != null) {
+            // La membrane possède déjà une méthode clone()
+            copie.menbrane = this.menbrane.clone();
+        }
+        
+        // Clone thermostat
+        if (this.thermostat != null) {
+            ElementChauffantDTO dto = (ElementChauffantDTO) this.thermostat.ToDto();
+            copie.thermostat = new Thermostat(dto);
+        }
+        
+        // Clone fil
+        if (this.fil != null) {
+            copie.fil = this.fil.clone();
+        }
+        
         return copie;  
     }
     
@@ -318,7 +342,7 @@ public class Piece implements Cloneable, Serializable {
         //menbrane = new Membrane((int)bounds.getWidth(), (int)bounds.getHeight(), espacement, marge);
         menbrane = new Membrane(largeur, longueur, espacement, marge);
         
-        //regener le fil
+        // Régénérer le fil car la grille a changé
         regenererFilSiNecessaire();
     }
     
@@ -330,7 +354,8 @@ public class Piece implements Cloneable, Serializable {
     public void AjouterThermostat(ThermostatDTO dto) {
         thermostat = new Thermostat(dto);
         elements.add(thermostat);
-          // Régénérer le fil car le thermostat est le point de départ
+        
+        // Régénérer le fil car le thermostat est le point de départ
         regenererFilSiNecessaire();
     }
     
@@ -381,8 +406,8 @@ public class Piece implements Cloneable, Serializable {
         // Validation automatique des contraintes après génération
         validerContraintes();
     }
-
-       /**
+    
+    /**
      * Valide toutes les contraintes du fil et affiche les violations dans la console
      */
     private void validerContraintes() {
@@ -394,18 +419,22 @@ public class Piece implements Cloneable, Serializable {
             menbrane, getMeubles(), elements, thermostat, fil
         );
         
-        RapportValidation rapport = validateur.validerToutesLesContraintes();
-        
-        // Afficher le rapport dans la console
-        if (rapport.aDesProblemes()) {
-            System.out.println("\n  contraintes n'ont respectées");
-        } else {
-            System.out.println("\n✅ Validation réussie - Toutes les contraintes sont respectées");
-        }
+        // La validation affiche automatiquement dans la console
+        validateur.validerToutesLesContraintes();
     }
+
     
     public Fil getFilChauffant() {
         return fil;
+    }
+    
+    /**
+     * Définit directement le fil chauffant (utilisé pour sélection manuelle chemin)
+     */
+    public void setFilChauffant(Fil nouveauFil) {
+        this.fil = nouveauFil;
+        // Validation après modification
+        validerContraintes();
     }
     
     public void SupprimerFilChauffant() {
