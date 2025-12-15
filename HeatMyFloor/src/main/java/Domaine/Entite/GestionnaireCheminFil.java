@@ -119,7 +119,13 @@ public class GestionnaireCheminFil {
             nouveauFil.ajouterSegment(pointActuel);
         }
         
-        nouveauFil.ajouterSegment(nouvelleDirection);
+        if (!nouveauFil.ajouterSegment(nouvelleDirection)) {
+            System.out.println("Impossible d'ajouter le segment vers la nouvelle direction");
+            return fil; // Retourner l'ancien fil si échec
+        }
+        
+        // CORRECTION CRITIQUE: Continuer la génération automatique après le nouveau segment
+        nouveauFil = traceur.continuerTracageDepuis(nouveauFil, nouvelleDirection, menbrane, distanceMaxLigne);
      
         return nouveauFil;
     }
