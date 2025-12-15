@@ -35,6 +35,14 @@ public class Fil implements Serializable {
         if (distance > LONGUEUR_MAX_SEGMENT) {
             return false;
         }
+
+        // CONTRAINTE CRITIQUE: Vérifier que ce point n'a jamais été visité
+        for (Point pointExistant : chemin) {
+            if (pointExistant.equals(prochainPoint)) {
+                System.out.println("REJET: Point déjà visité dans le chemin: " + prochainPoint);
+                return false;
+            }
+        }
         
         if(longueurActuelle + distance <= longueurMaximale){
                         // Vérifier le non-croisement avant d'ajouter
