@@ -193,7 +193,21 @@ public class TraceurFil {
             }
             ajouterLigneAvecContrainte(fil, ligneCourante);
         }
+
+         // CONTRAINTE #11: Vérifier si toute la longueur a été utilisée
+        int longueurUtilisee = fil.getLongueurActuelle();
+        int longueurRestante = fil.getLongueurRestante();
+        double pourcentageUtilise = (longueurUtilisee * 100.0) / longueurMax;
         
+        if (longueurRestante > 0) {
+            System.out.println("\n⚠️ AVERTISSEMENT: Le fil n'a pas utilisé toute sa longueur!");
+            System.out.println("   Longueur maximale: " + longueurMax + " pouces");
+            System.out.println("   Longueur utilisée: " + longueurUtilisee + " pouces (" + String.format("%.1f%%", pourcentageUtilise) + ")");
+            System.out.println("   Longueur restante: " + longueurRestante + " pouces\n");
+        } else {
+            System.out.println("✓ Fil tracé avec succès: " + longueurUtilisee + " pouces utilisés sur " + longueurMax);
+        }
+         
         return fil;
     }
     
