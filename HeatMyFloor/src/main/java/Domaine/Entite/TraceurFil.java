@@ -507,4 +507,104 @@ public class TraceurFil {
         this.distanceSecurite = distance;
     }
 
+     /**
+     * Continue le traçage automatique du fil à partir d'un point donné.
+     * Utilisé pour la sélection manuelle de chemin.
+     * @param filExistant Le fil avec le chemin déjà tracé
+     * @param pointActuel Le point actuel d'où continuer
+     * @param membrane La membrane avec les intersections
+     * @param distanceMaxLigne Distance maximale par ligne
+     * @return Le fil avec le traçage continué
+     */
+    public Fil continuerTracageDepuis(Fil filExistant, Point pointActuel, Membrane membrane, int distanceMaxLigne) {
+        ArrayList<Point> intersections = membrane.ObtenirIntersections();
+        
+        // Filtrer les intersections valides non encore visitées
+        ArrayList<Point> intersectionsValides = new ArrayList<>();
+        ArrayList<Point> cheminExistant = filExistant.getChemin();
+        
+        for (Point inter : intersections) {
+            if (estPointValide(inter)) {
+                // Vérifier que le point n'est pas déjà dans le chemin
+                boolean dejaVisite = false;
+                for (Point pointChemin : cheminExistant) {
+                    if (pointChemin.equals(inter)) {
+                        dejaVisite = true;
+                        break;
+                    }
+                }
+                if (!dejaVisite) {
+                    intersectionsValides.add(inter);
+                }
+            }
+        }
+        
+        if (intersectionsValides.isEmpty()) {
+            System.out.println("Aucune intersection valide disponible pour continuer le traçage");
+            return filExistant;
+        }
+        
+        // Trier par ligne (y) puis par colonne (x) pour créer un serpentin
+        Collections.sort(intersectionsValides, (Point p1, Point p2) -> {
+            if (p1.y != p2.y) {
+                return Integer.compare(p1.y, p2.y);
+            }
+            return Integer.compare(p1.x, p2.x);
+        });
+        
+        // Déterminer la direction initiale en fonction du point actuel
+        boolean directionDroite = true;
+        if (!intersectionsValides.isEmpty()) {
+            Point premierPoint = intersectionsValides.get(0);
+            if (premierPoint.x < pointActuel.x) {
+                directionDroite = false;
+            }
+        }
+        
+        // Tracer en serpentin à partir du point actuel
+        int ligneActuelle = pointActuel.y;
+        ArrayList<Point> ligneCourante = new ArrayList<>();
+        
+        for (Point inter : intersectionsValides) {
+            if (inter.y != ligneActuelle) {
+                // Traiter la ligne précédente
+                if (!ligneCourante.isEmpty()) {
+                    if (!directionDroite) {
+                        Collections.reverse(ligneCourante);
+                    }
+                    
+                    if (!ajouterLigneAvecContrainte(filExistant, ligneCourante)) {
+                        return filExistant;
+                    }
+                    
+                    // Transition vers la nouvelle ligne
+                    Point dernierPoint = filExistant.getChemin().get(filExistant.getChemin().size() - 1);
+                    Point pointTransition = new Point(dernierPoint.x, inter.y);
+                    
+                    if (!pointTransition.equals(dernierPoint) && estPointValide(pointTransition) &&
+                            estSegmentValide(dernierPoint, pointTransition)) {
+                        filExistant.ajouterSegment(pointTransition);
+                    }
+                    
+                    directionDroite = !directionDroite;
+                }
+                
+                // Nouvelle ligne
+                ligneActuelle = inter.y;
+                ligneCourante = new ArrayList<>();
+            }
+            
+            ligneCourante.add(inter);
+        }
+        
+        // Traiter la dernière ligne
+        if (!ligneCourante.isEmpty()) {
+            if (!directionDroite) {
+                Collections.reverse(ligneCourante);
+            }
+            ajouterLigneAvecContrainte(filExistant, ligneCourante);
+        }
+        
+        return filExistant;
+    }
 }
