@@ -1711,6 +1711,30 @@ JPanel row(String label, JTextField ft, JTextField in, JTextField num, JTextFiel
         }
         
         controller.TracerFilChauffant(longueurMaxPouces, distanceMaxPouces);
+
+        // Vérifier si le fil a utilisé toute sa longueur
+        Domaine.Entite.Fil fil = controller.ObtenirFilChauffant();
+        if (fil != null) {
+            int longueurRestante = fil.getLongueurRestante();
+            if (longueurRestante > 0) {
+                double longueurRestantePieds = longueurRestante / 12.0;
+                javax.swing.JOptionPane.showMessageDialog(this,
+                    String.format("⚠️ ATTENTION: Le fil n'a pas pu utiliser toute sa longueur!\n\n" +
+                                  "Longueur totale: %.1f pieds\n" +
+                                  "Longueur utilisée: %.1f pieds\n" +
+                                  "Longueur restante: %.1f pieds\n\n" +
+                                  "Le fil ne peut pas être coupé. Considérez:\n" +
+                                  "- Ajuster l'espacement de la membrane\n" +
+                                  "- Modifier la disposition des meubles\n" +
+                                  "- Utiliser un fil plus court",
+                                  longueurMaxPouces / 12.0,
+                                  fil.getLongueurActuelle() / 12.0,
+                                  longueurRestantePieds),
+                    "Longueur de fil non utilisée",
+                    javax.swing.JOptionPane.WARNING_MESSAGE);
+            }
+        }
+        
         rafraichirVue();
 
     }
