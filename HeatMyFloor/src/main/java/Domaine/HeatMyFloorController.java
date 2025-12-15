@@ -139,6 +139,9 @@ public class HeatMyFloorController {
                     maPiece.SupprimerFilChauffant();
                 }
             }
+             // Régénérer le fil après modification d'élément chauffant ou thermostat
+            // Note: On appelle ModifierElementSelectionne de Piece qui déclenche regenererFilSiNecessaire()
+            maPiece.ModifierElementSelectionne(null, null, null);
             return true;
             
         }
