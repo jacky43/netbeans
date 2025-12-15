@@ -312,6 +312,19 @@ public class HeatMyFloorController {
         
         if (succes) {
             System.out.println("Translation réussie: " + pointGrille + " -> " + nouvellePosition);
+             // IMPORTANT: Régénérer le fil car la grille a été modifiée
+            if (maPiece.getThermostat() != null && maPiece.getFilChauffant() != null) {
+                // Obtenir les paramètres du fil existant pour le recalcul
+                Fil filActuel = maPiece.getFilChauffant();
+                int longueurMax = filActuel.getLongueurMaximale();
+                
+                // Régénérer avec les mêmes paramètres
+                // Note: la distance max ligne droite est stockée dans TraceurFil, on utilise une valeur par défaut
+                TraceurFil traceur = new TraceurFil(membrane, maPiece.getMeubles(), maPiece.getElements(), 120);
+                Fil nouveauFil = traceur.tracerFilAutomatique(maPiece.getThermostat().getPosition(), longueurMax);
+                maPiece.SupprimerFilChauffant();
+                // Le nouveau fil sera assigné via TracerFilChauffant
+            }
         }
         
         return succes;
