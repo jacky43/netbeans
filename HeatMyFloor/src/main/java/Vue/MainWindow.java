@@ -80,6 +80,12 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JLabel positionYJLabel;
     private javax.swing.JTextField positionPiedYJText, positionPouceYJText, positionYElementNumJText, positionYElementDenJText;
 
+     // Champs pour configuration membrane
+    private javax.swing.JLabel espacementMembraneLabel;
+    private javax.swing.JTextField espacementMembraneJText;
+    private javax.swing.JLabel margeMembraneLabel;
+    private javax.swing.JTextField margeMembraneJText;
+    
     private javax.swing.JButton redoButton;
     private javax.swing.JMenuItem sauvegarderItem;
     private javax.swing.JButton ajoutMeubleSDButton;
@@ -185,6 +191,13 @@ public class MainWindow extends javax.swing.JFrame {
         activerMembraneButton = new javax.swing.JButton();
         tracerFilButton = new javax.swing.JButton();
         translationMembraneButton = new javax.swing.JButton();
+
+          // Initialisation des champs membrane
+        espacementMembraneLabel = new javax.swing.JLabel();
+        espacementMembraneJText = new javax.swing.JTextField();
+        margeMembraneLabel = new javax.swing.JLabel();
+        margeMembraneJText = new javax.swing.JTextField();
+        
         supprimerMeubleButton = new javax.swing.JButton();
         modifierMeubleButton = new javax.swing.JButton();
         longueurPiedJText = new javax.swing.JTextField();
@@ -299,6 +312,23 @@ public class MainWindow extends javax.swing.JFrame {
             ajouterThermostat();
         });
         buttonTopPanel.add(ajoutThermostatButton);
+
+        // Configuration membrane
+        espacementMembraneLabel.setText("Espacement (pouces):");
+        buttonTopPanel.add(espacementMembraneLabel);
+        
+        espacementMembraneJText.setText("6");
+        espacementMembraneJText.setPreferredSize(new java.awt.Dimension(40, 25));
+        espacementMembraneJText.setToolTipText("Distance entre intersections de la grille");
+        buttonTopPanel.add(espacementMembraneJText);
+        
+        margeMembraneLabel.setText("Marge (pouces):");
+        buttonTopPanel.add(margeMembraneLabel);
+        
+        margeMembraneJText.setText("3");
+        margeMembraneJText.setPreferredSize(new java.awt.Dimension(40, 25));
+        margeMembraneJText.setToolTipText("Distance depuis les bords de la pièce");
+        buttonTopPanel.add(margeMembraneJText);
         
         activerMembraneButton.setText("Activer Membrane");
         activerMembraneButton.addActionListener((java.awt.event.ActionEvent evt) -> {
@@ -1636,8 +1666,54 @@ JPanel row(String label, JTextField ft, JTextField in, JTextField num, JTextFiel
             return;
         }
         
-        // Initialiser la membrane avec espacement de 6 pouces et marge de 3 pouces
-        controller.InitialiserMembrane(6, 3);
+ // Récupérer les valeurs saisies par l'utilisateur
+        int espacement = 6; // valeur par défaut
+        int marge = 3; // valeur par défaut
+        
+        try {
+            String espacementText = espacementMembraneJText.getText().trim();
+            if (!espacementText.isEmpty()) {
+                espacement = Integer.parseInt(espacementText);
+                if (espacement <= 0) {
+                    javax.swing.JOptionPane.showMessageDialog(this,
+                        "L'espacement doit être un nombre positif.",
+                        "Erreur",
+                        javax.swing.JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+            }
+        } catch (NumberFormatException e) {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                "Espacement invalide. Veuillez entrer un nombre entier.",
+                "Erreur",
+                javax.swing.JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        try {
+            String margeText = margeMembraneJText.getText().trim();
+            if (!margeText.isEmpty()) {
+                marge = Integer.parseInt(margeText);
+                if (marge < 0) {
+                    javax.swing.JOptionPane.showMessageDialog(this,
+                        "La marge ne peut pas être négative.",
+                        "Erreur",
+                        javax.swing.JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+            }
+        } catch (NumberFormatException e) {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                "Marge invalide. Veuillez entrer un nombre entier.",
+                "Erreur",
+                javax.swing.JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        // Initialiser la membrane avec les valeurs configurées
+        controller.InitialiserMembrane(espacement, marge);
+        
+        System.out.println("Membrane activée avec espacement=" + espacement + " pouces, marge=" + marge + " pouces");
         rafraichirVue();
     }
     
