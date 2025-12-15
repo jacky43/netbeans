@@ -332,5 +332,106 @@ public class HeatMyFloorController {
         
         return succes;
     }
-
+    
+  // ==================== SÉLECTION MANUELLE CHEMIN FIL ====================
+    
+    /**
+     * Sélectionne une intersection du chemin du fil
+     * @param position Position cliquée
+     * @return true si une intersection a été sélectionnée
+     */
+    public boolean SelectionnerIntersectionFil(Point position) {
+        if (maPiece.getFilChauffant() == null || maPiece.getMembrane() == null) {
+            return false;
+        }
+        
+        // Créer ou réinitialiser le gestionnaire si nécessaire
+        if (gestionnaireCheminFil == null) {
+            TraceurFil traceur = new TraceurFil(
+                maPiece.getMembrane(), 
+                maPiece.getMeubles(), 
+                maPiece.getElements(), 
+                120
+            );
+            gestionnaireCheminFil = new GestionnaireCheminFil(
+                maPiece.getFilChauffant(),
+                maPiece.getMembrane(),
+                traceur
+            );
+        }
+        
+        return gestionnaireCheminFil.selectionnerIntersection(position);
+    }
+    
+    /**
+     * Obtient l'intersection actuellement sélectionnée
+     * @return Le point sélectionné ou null
+     */
+    public Point ObtenirIntersectionSelectionnee() {
+        if (gestionnaireCheminFil == null) {
+            return null;
+        }
+        return gestionnaireCheminFil.getIntersectionSelectionnee();
+    }
+    
+    /**
+     * Obtient les directions disponibles depuis l'intersection sélectionnée
+     * @return Liste des directions disponibles
+     */
+    public ArrayList<GestionnaireCheminFil.DirectionDisponible> ObtenirDirectionsDisponibles() {
+        if (gestionnaireCheminFil == null) {
+            return new ArrayList<>();
+        }
+        return gestionnaireCheminFil.obtenirDirectionsDisponibles();
+    }
+    
+    /**
+     * Recalcule le chemin vers une nouvelle direction
+     * @param nouvelleDirection Le point de la nouvelle direction
+     * @return true si le recalcul a réussi
+     */
+    public boolean RecalculerCheminVers(Point nouvelleDirection) {
+        if (gestionnaireCheminFil == null || maPiece.getFilChauffant() == null) {
+            return false;
+        }
+        
+        // Sauvegarder l'état pour undo
+        if (estInitialise) {
+            history.saveState(maPiece);
+        }
+        
+        int longueurMax = maPiece.getFilChauffant().getLongueurMaximale();
+        Fil nouveauFil = gestionnaireCheminFil.recalculerCheminVers(nouvelleDirection, longueurMax, 120);
+        
+        if (nouveauFil != null) {
+            maPiece.SupprimerFilChauffant();
+            maPiece.AjouterFilChauffant(nouveauFil);
+            
+            // Réinitialiser le gestionnaire avec le nouveau fil
+            TraceurFil traceur = new TraceurFil(
+                maPiece.getMembrane(), 
+                maPiece.getMeubles(), 
+                maPiece.getElements(), 
+                120
+            );
+            gestionnaireCheminFil = new GestionnaireCheminFil(
+                nouveauFil,
+                maPiece.getMembrane(),
+                traceur
+            );
+            
+            return true;
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Désélectionne l'intersection actuelle
+     */
+    public void DeselectionnerIntersection() {
+        if (gestionnaireCheminFil != null) {
+            gestionnaireCheminFil.deselectionner();
+        }
+    }
 }
