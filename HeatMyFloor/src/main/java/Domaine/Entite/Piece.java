@@ -328,6 +328,8 @@ public class Piece implements Cloneable, Serializable {
     public void AjouterThermostat(ThermostatDTO dto) {
         thermostat = new Thermostat(dto);
         elements.add(thermostat);
+          // Régénérer le fil car le thermostat est le point de départ
+        regenererFilSiNecessaire();
     }
     
     public Thermostat getThermostat() {
