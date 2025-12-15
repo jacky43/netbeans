@@ -53,6 +53,9 @@ public class MainWindow extends javax.swing.JFrame {
     private Point intersectionOriginale = null;
     private Point intersectionDragStart = null;
 
+    // Mode sélection manuelle chemin fil
+    private boolean modeSelectionCheminActive = false;
+    private Point intersectionFilSelectionnee = null;
    
 // LARGEUR ELEMENT SELECTIONNE
     private javax.swing.JLabel largeurJLabel;
@@ -96,6 +99,7 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JButton supprimerMeubleButton;
     private javax.swing.JButton modifierMeubleButton;
     private javax.swing.JButton translationMembraneButton;
+    private javax.swing.JButton selectionCheminButton;
     private javax.swing.JButton undoButton;
     private javax.swing.JButton zoomInButton;
     private javax.swing.JButton zoomOutButton;
@@ -348,6 +352,12 @@ public class MainWindow extends javax.swing.JFrame {
         });
         buttonTopPanel.add(translationMembraneButton);
 
+        selectionCheminButton = new javax.swing.JButton();
+        selectionCheminButton.setText("Sélection Manuelle Chemin");
+        selectionCheminButton.addActionListener((java.awt.event.ActionEvent evt) -> {
+            toggleModeSelectionChemin();
+        });
+        buttonTopPanel.add(selectionCheminButton);
         
         supprimerMeubleButton.setText("Supprimer élément sélectionné");
         supprimerMeubleButton.addActionListener((java.awt.event.ActionEvent evt) -> {
@@ -907,16 +917,29 @@ JPanel row(String label, JTextField ft, JTextField in, JTextField num, JTextFiel
         Point positionSouris = evt.getPoint();
         Point positionMonde = screenToWorld(positionSouris);
         
-//        largeurPieceJText.setText(Integer.toString(positionSouris.x) + ", " + Integer.toString(positionMonde.x));
-//        longueurPieceJText.setText(Integer.toString(positionSouris.y) + ", " + Integer.toString(positionMonde.y));
-        
-        Object selection = controller.SelectionnerElement(positionMonde);
-        if (selection instanceof ElementSelectionnableDTO elementDTO) {
-            mettreAJourPanneauSelection(elementDTO);
-        } else {
-            reinitialiserPanneauEdition();
-        }
-        rafraichirVue();
+        // Mode sélection manuelle chemin fil
+        if (modeSelectionCheminActive) {
+            if (controller.SelectionnerIntersectionFil(positionMonde)) {
+                intersectionFilSelectionnee = controller.ObtenirIntersectionSelectionnee();
+                System.out.println("Intersection sélectionnée: " + intersectionFilSelectionnee);
+                
+                // Obtenir les directions disponibles
+                java.util.ArrayList<Domaine.Entite.GestionnaireCheminFil.DirectionDisponible> directions = 
+                    controller.ObtenirDirectionsDisponibles();
+                
+                if (!directions.isEmpty()) {
+                    afficherDialogueDirections(directions);
+                } else {
+                    javax.swing.JOptionPane.showMessageDialog(this,
+                        "Aucune direction disponible depuis ce point.",
+                        "Information",
+                        javax.swing.JOptionPane.INFORMATION_MESSAGE);
+                }
+            } else {
+                System.out.println("Aucune intersection proche trouvée");
+            }
+            rafraichirVue();
+            return;
     }
     
     private void drawingPanelMousePressed(java.awt.event.MouseEvent e) { 
@@ -1545,7 +1568,7 @@ JPanel row(String label, JTextField ft, JTextField in, JTextField num, JTextFiel
         
         //controller = new HeatMyFloorController();
         controller.InitialiserPiece(nouvelleForme);
-        controller.DefinirDimensionsPiece(largeurPouce, longueurPouce);
+        controller.DefinirDimensionsPiece((int)largeurPouce, (int)longueurPouce);
         drawingPanel.mettreAJourController(controller);
         
         reinitialiserPanneauEdition();
@@ -1886,6 +1909,105 @@ JPanel row(String label, JTextField ft, JTextField in, JTextField num, JTextFiel
         }
         
         rafraichirVue();
+    }
+
+    /**
+     * Active/désactive le mode sélection manuelle du chemin fil
+     * En mode sélection, l'utilisateur peut cliquer sur une intersection du fil
+     * et choisir manuellement la prochaine direction
+     */
+    private void toggleModeSelectionChemin() {
+        if (controller.ObtenirFilChauffant() == null) {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                "Veuillez d'abord tracer le fil chauffant.",
+                "Erreur",
+                javax.swing.JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        if (controller.ObtenirMembrane() == null) {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                "Veuillez d'abord activer la membrane.",
+                "Erreur",
+                javax.swing.JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        // Désactiver le mode translation si actif
+        if (modeTranslationActive) {
+            toggleModeTranslation();
+        }
+        
+        modeSelectionCheminActive = !modeSelectionCheminActive;
+        
+        if (modeSelectionCheminActive) {
+            selectionCheminButton.setText("✓ Sélection Active");
+            selectionCheminButton.setBackground(new java.awt.Color(173, 216, 230)); // Bleu clair
+            javax.swing.JOptionPane.showMessageDialog(this,
+                "Mode sélection manuelle activé.\nCliquez sur une intersection du fil pour voir les directions disponibles.",
+                "Info",
+                javax.swing.JOptionPane.INFORMATION_MESSAGE);
+        } else {
+            selectionCheminButton.setText("Sélection Manuelle Chemin");
+            selectionCheminButton.setBackground(null);
+            controller.DeselectionnerIntersection();
+            intersectionFilSelectionnee = null;
+        }
+        rafraichirVue();
+    }
+    
+    /**
+     * Affiche un dialogue permettant de choisir une direction pour le chemin du fil
+     * @param directions Liste des directions disponibles
+     */
+    private void afficherDialogueDirections(java.util.ArrayList<Domaine.Entite.GestionnaireCheminFil.DirectionDisponible> directions) {
+        // Créer une liste de choix avec les noms de directions
+        String[] choix = new String[directions.size()];
+        for (int i = 0; i < directions.size(); i++) {
+            choix[i] = directions.get(i).toString();
+        }
+        
+        // Afficher le dialogue de sélection
+        String selectionStr = (String) javax.swing.JOptionPane.showInputDialog(
+            this,
+            "Choisissez la direction pour continuer le tracé du fil:",
+            "Sélection Direction",
+            javax.swing.JOptionPane.QUESTION_MESSAGE,
+            null,
+            choix,
+            choix[0]
+        );
+        
+        if (selectionStr != null) {
+            // Trouver la direction correspondante
+            Domaine.Entite.GestionnaireCheminFil.DirectionDisponible directionChoisie = null;
+            for (Domaine.Entite.GestionnaireCheminFil.DirectionDisponible dir : directions) {
+                if (dir.toString().equals(selectionStr)) {
+                    directionChoisie = dir;
+                    break;
+                }
+            }
+            
+            if (directionChoisie != null) {
+                // Recalculer le chemin avec la nouvelle direction
+                if (controller.RecalculerCheminVers(directionChoisie.getPoint())) {
+                    javax.swing.JOptionPane.showMessageDialog(this,
+                        "Chemin recalculé avec succès!",
+                        "Succès",
+                        javax.swing.JOptionPane.INFORMATION_MESSAGE);
+                    
+                    // Réinitialiser le mode sélection pour permettre une nouvelle sélection
+                    controller.DeselectionnerIntersection();
+                    intersectionFilSelectionnee = null;
+                } else {
+                    javax.swing.JOptionPane.showMessageDialog(this,
+                        "Erreur lors du recalcul du chemin.",
+                        "Erreur",
+                        javax.swing.JOptionPane.ERROR_MESSAGE);
+                }
+                rafraichirVue();
+            }
+        }
     }
 
 }
