@@ -9,7 +9,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 
 
-public class Fil implements Serializable {
+public class Fil implements Cloneable, Serializable {
     private Point pointDepart;
     private ArrayList<Point> chemin;
     private int longueurMaximale;
@@ -176,6 +176,22 @@ public class Fil implements Serializable {
      
       public int getLongueurActuelle(){
         return longueurActuelle;
+    }
+
+     @Override
+    public Fil clone() {
+        Fil copie = new Fil(this.pointDepart, this.longueurMaximale);
+        // Réinitialiser pour repartir de zéro
+        copie.chemin = new ArrayList<>();
+        copie.longueurActuelle = 0;
+        
+        // Clone le chemin complet
+        for (Point point : this.chemin) {
+            copie.chemin.add(new Point(point));
+        }
+        copie.longueurActuelle = this.longueurActuelle;
+        
+        return copie;
     }
     
 }
