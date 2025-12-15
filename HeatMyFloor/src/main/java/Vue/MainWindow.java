@@ -52,10 +52,11 @@ public class MainWindow extends javax.swing.JFrame {
     private boolean isDraggingIntersection = false;
     private Point intersectionOriginale = null;
     private Point intersectionDragStart = null;
-
+    
     // Mode sélection manuelle chemin fil
     private boolean modeSelectionCheminActive = false;
     private Point intersectionFilSelectionnee = null;
+
    
 // LARGEUR ELEMENT SELECTIONNE
     private javax.swing.JLabel largeurJLabel;
@@ -83,12 +84,12 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JLabel positionYJLabel;
     private javax.swing.JTextField positionPiedYJText, positionPouceYJText, positionYElementNumJText, positionYElementDenJText;
 
-     // Champs pour configuration membrane
+    // Champs pour configuration membrane
     private javax.swing.JLabel espacementMembraneLabel;
     private javax.swing.JTextField espacementMembraneJText;
     private javax.swing.JLabel margeMembraneLabel;
     private javax.swing.JTextField margeMembraneJText;
-    
+
     private javax.swing.JButton redoButton;
     private javax.swing.JMenuItem sauvegarderItem;
     private javax.swing.JButton ajoutMeubleSDButton;
@@ -195,8 +196,8 @@ public class MainWindow extends javax.swing.JFrame {
         activerMembraneButton = new javax.swing.JButton();
         tracerFilButton = new javax.swing.JButton();
         translationMembraneButton = new javax.swing.JButton();
-
-          // Initialisation des champs membrane
+        
+        // Initialisation des champs membrane
         espacementMembraneLabel = new javax.swing.JLabel();
         espacementMembraneJText = new javax.swing.JTextField();
         margeMembraneLabel = new javax.swing.JLabel();
@@ -316,7 +317,7 @@ public class MainWindow extends javax.swing.JFrame {
             ajouterThermostat();
         });
         buttonTopPanel.add(ajoutThermostatButton);
-
+        
         // Configuration membrane
         espacementMembraneLabel.setText("Espacement (pouces):");
         buttonTopPanel.add(espacementMembraneLabel);
@@ -358,6 +359,7 @@ public class MainWindow extends javax.swing.JFrame {
             toggleModeSelectionChemin();
         });
         buttonTopPanel.add(selectionCheminButton);
+
         
         supprimerMeubleButton.setText("Supprimer élément sélectionné");
         supprimerMeubleButton.addActionListener((java.awt.event.ActionEvent evt) -> {
@@ -940,6 +942,18 @@ JPanel row(String label, JTextField ft, JTextField in, JTextField num, JTextFiel
             }
             rafraichirVue();
             return;
+        }
+        
+//        largeurPieceJText.setText(Integer.toString(positionSouris.x) + ", " + Integer.toString(positionMonde.x));
+//        longueurPieceJText.setText(Integer.toString(positionSouris.y) + ", " + Integer.toString(positionMonde.y));
+        
+        Object selection = controller.SelectionnerElement(positionMonde);
+        if (selection instanceof ElementSelectionnableDTO elementDTO) {
+            mettreAJourPanneauSelection(elementDTO);
+        } else {
+            reinitialiserPanneauEdition();
+        }
+        rafraichirVue();
     }
     
     private void drawingPanelMousePressed(java.awt.event.MouseEvent e) { 
@@ -1568,7 +1582,8 @@ JPanel row(String label, JTextField ft, JTextField in, JTextField num, JTextFiel
         
         //controller = new HeatMyFloorController();
         controller.InitialiserPiece(nouvelleForme);
-        controller.DefinirDimensionsPiece((int)largeurPouce, (int)longueurPouce);
+        // CORRECTION: Passer les dimensions totales en pouces (largeur et longueur), pas seulement les pouces
+        controller.DefinirDimensionsPiece((int)largeur, (int)longueur);
         drawingPanel.mettreAJourController(controller);
         
         reinitialiserPanneauEdition();
@@ -1689,7 +1704,7 @@ JPanel row(String label, JTextField ft, JTextField in, JTextField num, JTextFiel
             return;
         }
         
- // Récupérer les valeurs saisies par l'utilisateur
+        // Récupérer les valeurs saisies par l'utilisateur
         int espacement = 6; // valeur par défaut
         int marge = 3; // valeur par défaut
         
@@ -1737,6 +1752,7 @@ JPanel row(String label, JTextField ft, JTextField in, JTextField num, JTextFiel
         controller.InitialiserMembrane(espacement, marge);
         
         System.out.println("Membrane activée avec espacement=" + espacement + " pouces, marge=" + marge + " pouces");
+        
         rafraichirVue();
     }
     
@@ -1810,7 +1826,10 @@ JPanel row(String label, JTextField ft, JTextField in, JTextField num, JTextFiel
         }
         
         controller.TracerFilChauffant(longueurMaxPouces, distanceMaxPouces);
-
+        
+        // Note: La validation des contraintes est automatique et affichée dans la console
+        // Voir Piece.regenererFilSiNecessaire() -> validerContraintes()
+        
         // Vérifier si le fil a utilisé toute sa longueur
         Domaine.Entite.Fil fil = controller.ObtenirFilChauffant();
         if (fil != null) {
@@ -1910,7 +1929,7 @@ JPanel row(String label, JTextField ft, JTextField in, JTextField num, JTextFiel
         
         rafraichirVue();
     }
-
+    
     /**
      * Active/désactive le mode sélection manuelle du chemin fil
      * En mode sélection, l'utilisateur peut cliquer sur une intersection du fil
