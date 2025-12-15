@@ -377,8 +377,32 @@ public class Piece implements Cloneable, Serializable {
         }
         TraceurFil traceur = new TraceurFil(menbrane, getMeubles(), elements, distanceMaxLigneFil);
         fil = traceur.tracerFilAutomatique(thermostat.getPosition(), longueurMaxFil);
+        
+        // Validation automatique des contraintes après génération
+        validerContraintes();
     }
 
+       /**
+     * Valide toutes les contraintes du fil et affiche les violations dans la console
+     */
+    private void validerContraintes() {
+        if (fil == null) {
+            return;
+        }
+        
+        ValidateurContraintes validateur = new ValidateurContraintes(
+            menbrane, getMeubles(), elements, thermostat, fil
+        );
+        
+        RapportValidation rapport = validateur.validerToutesLesContraintes();
+        
+        // Afficher le rapport dans la console
+        if (rapport.aDesProblemes()) {
+            System.out.println("\n  contraintes n'ont respectées");
+        } else {
+            System.out.println("\n✅ Validation réussie - Toutes les contraintes sont respectées");
+        }
+    }
     
     public Fil getFilChauffant() {
         return fil;
