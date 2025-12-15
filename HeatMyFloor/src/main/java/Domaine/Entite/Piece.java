@@ -199,6 +199,8 @@ public class Piece implements Cloneable, Serializable {
         Point positionInitiale = new Point(0, dto.getLongueur());
         dto = new ElementChauffantDTO(positionInitiale, dto.getLongueur(),dto.getLargeur());
         elements.add(new ElementChauffant(dto));
+          // Régénérer le fil car un nouvel élément chauffant a été ajouté
+        regenererFilSiNecessaire();
     }
     
     public Point TrouverPositionSurMurLePlusProche(Point positionRelative, int longueur,int largeur){
