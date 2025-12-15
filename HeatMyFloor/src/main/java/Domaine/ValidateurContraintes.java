@@ -25,6 +25,9 @@ public class ValidateurContraintes {
     private Thermostat thermostat;
     private Fil fil;
     
+    private int nombreViolations = 0;
+    private int nombreAvertissements = 0;
+    
     public ValidateurContraintes(Membrane membrane, ArrayList<Meuble> meubles, 
                                 ArrayList<ElementSelectionnable> elements, 
                                 Thermostat thermostat, Fil fil) {
@@ -44,50 +47,79 @@ public class ValidateurContraintes {
     }
     
     /**
-     * Valide TOUTES les contraintes et retourne un rapport détaillé
+     * Valide TOUTES les contraintes et affiche les résultats dans la console
+     * @return true si toutes les contraintes sont respectées, false sinon
      */
-    public RapportValidation validerToutesLesContraintes() {
-        RapportValidation rapport = new RapportValidation();
+    public boolean validerToutesLesContraintes() {
+        nombreViolations = 0;
+        nombreAvertissements = 0;
+        
+        System.out.println("\n========== VALIDATION DES CONTRAINTES ==========");
         
         if (fil == null) {
-            rapport.ajouterViolation("Aucun fil n'a été généré");
-            return rapport;
+            logViolation("Aucun fil n'a été généré");
+            afficherResume();
+            return false;
         }
         
         // Contrainte #1-4: Distances minimales avec obstacles
-        validerDistancesObstacles(rapport);
+        validerDistancesObstacles();
         
         // Contrainte #5: Distance entre fils parallèles
-        validerDistanceEntreFils(rapport);
+        validerDistanceEntreFils();
         
         // Contrainte #6: Longueur maximale des segments
-        validerLongueurSegments(rapport);
+        validerLongueurSegments();
         
         // Contrainte #7: Non-croisement
-        validerNonCroisement(rapport);
+        validerNonCroisement();
         
         // Contrainte #8: Pas de passage double
-        validerPassageUnique(rapport);
+        validerPassageUnique();
         
         // Contrainte #9: Longueur maximale du fil
-        validerLongueurMaximale(rapport);
+        validerLongueurMaximale();
         
         // Contrainte #10: Thermostat comme point de départ
-        validerPointDepart(rapport);
+        validerPointDepart();
         
         // Contrainte #11: Tracé en serpentin (vérification topologique)
-        validerMotifSerpentin(rapport);
+        validerMotifSerpentin();
         
         // Contrainte #12: Utilisation de la membrane
-        validerUtilisationMembrane(rapport);
+        validerUtilisationMembrane();
         
-        return rapport;
+        afficherResume();
+        return nombreViolations == 0;
+    }
+    
+    private void logViolation(String message) {
+        nombreViolations++;
+        System.out.println("❌ VIOLATION: " + message);
+    }
+    
+    private void logAvertissement(String message) {
+        nombreAvertissements++;
+        System.out.println("⚠️  AVERTISSEMENT: " + message);
+    }
+    
+    private void afficherResume() {
+        System.out.println("\n========== RÉSUMÉ VALIDATION ==========");
+        if (nombreViolations == 0) {
+            System.out.println("✅ Toutes les contraintes sont respectées!");
+        } else {
+            System.out.println("❌ " + nombreViolations + " violation(s) détectée(s)");
+        }
+        if (nombreAvertissements > 0) {
+            System.out.println("⚠️  " + nombreAvertissements + " avertissement(s)");
+        }
+        System.out.println("=======================================\n");
     }
     
     /**
      * Contraintes #1-4: Valide les distances minimales avec murs, meubles, drains, éléments chauffants
      */
-    private void validerDistancesObstacles(RapportValidation rapport) {
+    private void validerDistancesObstacles() {
         ArrayList<Point> chemin = fil.getChemin();
         
         for (int i = 0; i < chemin.size(); i++) {
@@ -95,7 +127,7 @@ public class ValidateurContraintes {
             
             // Contrainte #1: Distance avec murs (3 pouces)
             if (!respecteDistanceMur(point)) {
-                rapport.ajouterViolation(String.format(
+                logViolation(String.format(
                     "Point %d à (%d, %d) trop proche d'un mur (< %d pouces)",
                     i, point.x, point.y, DISTANCE_MIN_MURS_MEUBLES
                 ));
@@ -104,7 +136,7 @@ public class ValidateurContraintes {
             // Contrainte #1: Distance avec meubles (3 pouces)
             for (Meuble meuble : meubles) {
                 if (estTropProcheMeuble(point, meuble, DISTANCE_MIN_MURS_MEUBLES)) {
-                    rapport.ajouterViolation(String.format(
+                    logViolation(String.format(
                         "Point %d à (%d, %d) trop proche d'un meuble (< %d pouces)",
                         i, point.x, point.y, DISTANCE_MIN_MURS_MEUBLES
                     ));
@@ -115,7 +147,7 @@ public class ValidateurContraintes {
                     int distanceRequise = "TOILETTE".equalsIgnoreCase(meuble.getNom()) ? 
                                          DISTANCE_MIN_TOILETTE : DISTANCE_MIN_DRAIN;
                     if (estTropProcheDrain(point, meubleAvecDrain, distanceRequise)) {
-                        rapport.ajouterViolation(String.format(
+                        logViolation(String.format(
                             "Point %d à (%d, %d) trop proche d'un drain %s (< %d pouces)",
                             i, point.x, point.y, meuble.getNom(), distanceRequise
                         ));
@@ -126,7 +158,7 @@ public class ValidateurContraintes {
             // Contrainte #4: Distance avec éléments chauffants (8 pouces)
             for (ElementChauffant element : elementsChauffants) {
                 if (estTropProcheElement(point, element, DISTANCE_MIN_ELEMENT_CHAUFFANT)) {
-                    rapport.ajouterViolation(String.format(
+                    logViolation(String.format(
                         "Point %d à (%d, %d) trop proche d'un élément chauffant (< %d pouces)",
                         i, point.x, point.y, DISTANCE_MIN_ELEMENT_CHAUFFANT
                     ));
@@ -138,7 +170,7 @@ public class ValidateurContraintes {
     /**
      * Contrainte #5: Valide la distance minimale entre fils parallèles (3 pouces)
      */
-    private void validerDistanceEntreFils(RapportValidation rapport) {
+    private void validerDistanceEntreFils() {
         ArrayList<Point> chemin = fil.getChemin();
         
         for (int i = 0; i < chemin.size() - 1; i++) {
@@ -152,7 +184,7 @@ public class ValidateurContraintes {
                 
                 double distance = calculerDistanceEntreSegments(p1, p2, p3, p4);
                 if (distance > 0 && distance < DISTANCE_MIN_ENTRE_FILS) {
-                    rapport.ajouterViolation(String.format(
+                    logViolation(String.format(
                         "Segments [%d-%d] et [%d-%d] trop proches: %.1f pouces (< %d pouces)",
                         i, i+1, j, j+1, distance, DISTANCE_MIN_ENTRE_FILS
                     ));
@@ -164,7 +196,7 @@ public class ValidateurContraintes {
     /**
      * Contrainte #6: Valide que aucun segment ne dépasse 120 pouces (10 pieds)
      */
-    private void validerLongueurSegments(RapportValidation rapport) {
+    private void validerLongueurSegments() {
         ArrayList<Point> chemin = fil.getChemin();
         
         for (int i = 0; i < chemin.size() - 1; i++) {
@@ -173,7 +205,7 @@ public class ValidateurContraintes {
             double longueur = p1.distance(p2);
             
             if (longueur > LONGUEUR_MAX_SEGMENT) {
-                rapport.ajouterViolation(String.format(
+                logViolation(String.format(
                     "Segment [%d-%d] de (%d,%d) à (%d,%d) trop long: %.1f pouces (max %d pouces / 10 pieds)",
                     i, i+1, p1.x, p1.y, p2.x, p2.y, longueur, LONGUEUR_MAX_SEGMENT
                 ));
@@ -184,7 +216,7 @@ public class ValidateurContraintes {
     /**
      * Contrainte #7: Valide que le fil ne se croise pas
      */
-    private void validerNonCroisement(RapportValidation rapport) {
+    private void validerNonCroisement() {
         ArrayList<Point> chemin = fil.getChemin();
         
         for (int i = 0; i < chemin.size() - 1; i++) {
@@ -197,7 +229,7 @@ public class ValidateurContraintes {
                 Point p4 = chemin.get(j + 1);
                 
                 if (segmentsSeCroisent(p1, p2, p3, p4)) {
-                    rapport.ajouterViolation(String.format(
+                    logViolation(String.format(
                         "Croisement détecté entre segments [%d-%d] et [%d-%d]",
                         i, i+1, j, j+1
                     ));
@@ -209,7 +241,7 @@ public class ValidateurContraintes {
     /**
      * Contrainte #8: Valide que le fil ne passe pas deux fois au même point
      */
-    private void validerPassageUnique(RapportValidation rapport) {
+    private void validerPassageUnique() {
         ArrayList<Point> chemin = fil.getChemin();
         Set<String> pointsVisites = new HashSet<>();
         
@@ -218,7 +250,7 @@ public class ValidateurContraintes {
             String cle = point.x + "," + point.y;
             
             if (pointsVisites.contains(cle)) {
-                rapport.ajouterViolation(String.format(
+                logViolation(String.format(
                     "Point (%d, %d) visité plusieurs fois (position %d)",
                     point.x, point.y, i
                 ));
@@ -230,12 +262,12 @@ public class ValidateurContraintes {
     /**
      * Contrainte #9: Valide que la longueur totale ne dépasse pas la longueur maximale
      */
-    private void validerLongueurMaximale(RapportValidation rapport) {
+    private void validerLongueurMaximale() {
         int longueurActuelle = fil.getLongueurActuelle();
         int longueurMax = fil.getLongueurMaximale();
         
         if (longueurActuelle > longueurMax) {
-            rapport.ajouterViolation(String.format(
+            logViolation(String.format(
                 "Longueur du fil dépasse le maximum: %d pouces (max %d pouces)",
                 longueurActuelle, longueurMax
             ));
@@ -244,7 +276,7 @@ public class ValidateurContraintes {
         // Avertissement si le fil est beaucoup plus court
         double pourcentageUtilisation = (longueurActuelle * 100.0) / longueurMax;
         if (pourcentageUtilisation < 70) {
-            rapport.ajouterAvertissement(String.format(
+            logAvertissement(String.format(
                 "Fil sous-utilisé: %.1f%% (%d/%d pouces). Le fil ne peut pas être coupé.",
                 pourcentageUtilisation, longueurActuelle, longueurMax
             ));
@@ -254,9 +286,9 @@ public class ValidateurContraintes {
     /**
      * Contrainte #10: Valide que le fil commence au thermostat
      */
-    private void validerPointDepart(RapportValidation rapport) {
+    private void validerPointDepart() {
         if (thermostat == null) {
-            rapport.ajouterViolation("Aucun thermostat défini");
+            logViolation("Aucun thermostat défini");
             return;
         }
         
@@ -264,7 +296,7 @@ public class ValidateurContraintes {
         Point posThermostat = thermostat.getPosition();
         
         if (!pointDepart.equals(posThermostat)) {
-            rapport.ajouterViolation(String.format(
+            logViolation(String.format(
                 "Le fil ne commence pas au thermostat. Départ: (%d,%d), Thermostat: (%d,%d)",
                 pointDepart.x, pointDepart.y, posThermostat.x, posThermostat.y
             ));
@@ -275,10 +307,10 @@ public class ValidateurContraintes {
      * Contrainte #11: Valide que le tracé suit un motif serpentin
      * (Vérification basique: allers-retours avec changements de direction)
      */
-    private void validerMotifSerpentin(RapportValidation rapport) {
+    private void validerMotifSerpentin() {
         ArrayList<Point> chemin = fil.getChemin();
         if (chemin.size() < 3) {
-            rapport.ajouterAvertissement("Chemin trop court pour valider le motif serpentin");
+            logAvertissement("Chemin trop court pour valider le motif serpentin");
             return;
         }
         
@@ -303,7 +335,7 @@ public class ValidateurContraintes {
         
         // Un serpentin doit avoir plusieurs changements de direction
         if (changementsDirection < 2) {
-            rapport.ajouterAvertissement(
+            logAvertissement(
                 "Le tracé ne semble pas suivre un motif serpentin (peu de changements de direction)"
             );
         }
@@ -312,9 +344,9 @@ public class ValidateurContraintes {
     /**
      * Contrainte #12: Valide que tous les points du fil sont sur la grille membrane
      */
-    private void validerUtilisationMembrane(RapportValidation rapport) {
+    private void validerUtilisationMembrane() {
         if (membrane == null) {
-            rapport.ajouterViolation("Aucune membrane définie");
+            logViolation("Aucune membrane définie");
             return;
         }
         
@@ -334,7 +366,7 @@ public class ValidateurContraintes {
             }
             
             if (!surGrille) {
-                rapport.ajouterAvertissement(String.format(
+                logAvertissement(String.format(
                     "Point %d à (%d, %d) n'est pas sur une intersection de la membrane",
                     i, point.x, point.y
                 ));
