@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 
-public class Membrane implements Serializable {
+public class Membrane implements Cloneable, Serializable {
     private int espacement;
     private int largeurPiece;
     private int longueurPiece;
@@ -121,5 +121,13 @@ public class Membrane implements Serializable {
     
      public int getLongueurPiece(){
         return longueurPiece;
+    }
+
+      @Override
+    public Membrane clone() {
+        Membrane copie = new Membrane(this.largeurPiece, this.longueurPiece, this.espacement, this.margeContour);
+        // Clone la HashMap des intersections translatées
+        copie.intersectionsTranslates = new HashMap<>(this.intersectionsTranslates);
+        return copie;
     }
 }
