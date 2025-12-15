@@ -71,10 +71,10 @@ public class TraceurFil {
     
     private boolean estTropProcheMeuble(Point point, Meuble meuble) {
         Point posMeuble = meuble.getPosition();
-        int minX = posMeuble.x - DISTANCE_MIN_ELEMENT_CHAUFFANT;
-        int maxX = posMeuble.x + meuble.getLargeur() + DISTANCE_MIN_ELEMENT_CHAUFFANT;
-        int minY = posMeuble.y - meuble.getLongueur() - DISTANCE_MIN_ELEMENT_CHAUFFANT;
-        int maxY = posMeuble.y + DISTANCE_MIN_ELEMENT_CHAUFFANT;
+        int minX = posMeuble.x - distanceSecurite;
+        int maxX = posMeuble.x + meuble.getLargeur() + distanceSecurite;
+        int minY = posMeuble.y - meuble.getLongueur() - distanceSecurite;
+        int maxY = posMeuble.y + distanceSecurite;
         
         return point.x >= minX && point.x <= maxX &&
                point.y >= minY && point.y <= maxY;
@@ -82,10 +82,10 @@ public class TraceurFil {
     
     private boolean estTropProcheElement(Point point, ElementChauffant element) {
         Point posElement = element.getPosition();
-        int minX = posElement.x - distanceSecurite;
-        int maxX = posElement.x + element.getLargeur() + distanceSecurite;
-        int minY = posElement.y - element.getLongueur() - distanceSecurite;
-        int maxY = posElement.y + distanceSecurite;
+        int minX = posElement.x - DISTANCE_MIN_ELEMENT_CHAUFFANT;
+        int maxX = posElement.x + element.getLargeur() + DISTANCE_MIN_ELEMENT_CHAUFFANT;
+        int minY = posElement.y - element.getLongueur() - DISTANCE_MIN_ELEMENT_CHAUFFANT;
+        int maxY = posElement.y + DISTANCE_MIN_ELEMENT_CHAUFFANT;
         
         return point.x >= minX && point.x <= maxX &&
                point.y >= minY && point.y <= maxY;
