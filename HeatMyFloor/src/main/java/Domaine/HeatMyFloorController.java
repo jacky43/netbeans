@@ -42,6 +42,10 @@ public class HeatMyFloorController {
     public void DefinirDimensionsPiece(int largeurpouces, int longueurPouces){
         maPiece.DefinirDimensionReeles(largeurpouces, longueurPouces);
     }
+
+    public boolean RedimensionnerPiece(int largeurPouces, int longueurPouces){
+        return maPiece.Redimensionner(largeurPouces, longueurPouces);
+    }
     
     public void CreerPiece(PieceDTO p_piece)
     {
@@ -222,6 +226,10 @@ public class HeatMyFloorController {
     // Méthodes pour la membrane
     public void InitialiserMembrane(int espacement, int marge) {
         maPiece.InitialiserMembrane(espacement, marge);
+    }
+
+    public void DeplacerMembrane(int offsetX, int offsetY) {
+        maPiece.DeplacerMembrane(offsetX, offsetY);
     }
     
     public MembraneDTO ObtenirMembrane() {
