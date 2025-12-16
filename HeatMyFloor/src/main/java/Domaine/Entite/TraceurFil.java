@@ -172,10 +172,12 @@ public class TraceurFil {
                         // On cherche le point de la grille le plus proche sur la nouvelle ligne
                         Point pointTransition = trouverPointTransitionSurGrille(dernierPoint, inter.y);
                         
-                        if(pointTransition != null && !pointTransition.equals(dernierPoint) && 
+                        boolean segmentOrthogonal = pointTransition != null && (pointTransition.x == dernierPoint.x || pointTransition.y == dernierPoint.y);
+                        if(segmentOrthogonal && !pointTransition.equals(dernierPoint) && 
                            estPointValide(pointTransition) &&
                            estSegmentValide(dernierPoint, pointTransition) &&
-                           !estPointDejaVisite(fil.getChemin(), pointTransition)){
+                           !estPointDejaVisite(fil.getChemin(), pointTransition) &&
+                           !verifierCroisementAvecChemin(dernierPoint, pointTransition, fil.getChemin())){
                             fil.ajouterSegment(pointTransition);
                         }
                     } 
@@ -244,12 +246,18 @@ public class TraceurFil {
         for (Point p : ligne) {
             // CONTRAINTE #8: Si le point est déjà visité, ignorer mais continuer
             if (estPointDejaVisite(cheminExistant, p)) {
-                System.out.println("⚠️ Point déjà visité, ignoré: " + p);
-                continue; // IGNORER ce point mais continuer avec les autres
+                System.out.println("❌ Point déjà visité, arrêt de la ligne: " + p);
+                return false; // Stopper pour éviter de reboucler sur le chemin existant
             }
             
             // Si c'est le premier point et qu'on l'a déjà ajouté, passer
             if (dernierPoint.equals(p)) {
+                continue;
+            }
+
+            // CONTRAINTE: pas de diagonales, uniquement horizontal ou vertical
+            if (p.x != dernierPoint.x && p.y != dernierPoint.y) {
+                System.out.println("⚠️ Segment diagonal ignoré: " + dernierPoint + " -> " + p);
                 continue;
             }
             
@@ -583,11 +591,13 @@ public class TraceurFil {
                     // Transition vers la nouvelle ligne - CORRECTION: utiliser un point sur la grille
                     Point dernierPoint = filExistant.getChemin().get(filExistant.getChemin().size() - 1);
                     Point pointTransition = trouverPointTransitionSurGrille(dernierPoint, inter.y);
+                    boolean segmentOrthogonal = pointTransition != null && (pointTransition.x == dernierPoint.x || pointTransition.y == dernierPoint.y);
                     
-                    if (pointTransition != null && !pointTransition.equals(dernierPoint) && 
+                    if (segmentOrthogonal && !pointTransition.equals(dernierPoint) && 
                         estPointValide(pointTransition) &&
                         estSegmentValide(dernierPoint, pointTransition) &&
-                        !estPointDejaVisite(filExistant.getChemin(), pointTransition)) {
+                        !estPointDejaVisite(filExistant.getChemin(), pointTransition) &&
+                        !verifierCroisementAvecChemin(dernierPoint, pointTransition, filExistant.getChemin())) {
                         filExistant.ajouterSegment(pointTransition);
                     }
                     
@@ -687,10 +697,24 @@ public class TraceurFil {
         Point meilleurPoint = null;
         int distanceMin = Integer.MAX_VALUE;
         
+        // Priorité: même colonne pour garantir un déplacement vertical
+        for (Point inter : intersections) {
+            if (inter.y == nouvelleLigneY && inter.x == dernierPoint.x) {
+                int distance = Math.abs(inter.y - dernierPoint.y);
+                if (distance < distanceMin) {
+                    distanceMin = distance;
+                    meilleurPoint = inter;
+                }
+            }
+        }
+        if (meilleurPoint != null) {
+            return meilleurPoint;
+        }
+        
         // Chercher le point sur la nouvelle ligne qui est le plus proche du dernier point
         for (Point inter : intersections) {
             if (inter.y == nouvelleLigneY) {
-                int distance = calculerDistance(dernierPoint, inter);
+                int distance = Math.abs(inter.x - dernierPoint.x) + Math.abs(inter.y - dernierPoint.y);
                 if (distance < distanceMin) {
                     distanceMin = distance;
                     meilleurPoint = inter;
