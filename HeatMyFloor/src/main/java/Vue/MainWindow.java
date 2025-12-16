@@ -921,6 +921,34 @@ JPanel row(String label, JTextField ft, JTextField in, JTextField num, JTextFiel
         
         // Mode sélection manuelle chemin fil
         if (modeSelectionCheminActive) {
+            // Si une intersection est déjà sélectionnée, autoriser le choix direct en cliquant sur une direction disponible
+            if (intersectionFilSelectionnee != null) {
+                java.util.ArrayList<Domaine.Entite.GestionnaireCheminFil.DirectionDisponible> directionsActives = 
+                    controller.ObtenirDirectionsDisponibles();
+                Domaine.Entite.GestionnaireCheminFil.DirectionDisponible match = null;
+                for (Domaine.Entite.GestionnaireCheminFil.DirectionDisponible dir : directionsActives) {
+                    if (positionMonde.distance(dir.getPoint()) <= 5) { // tolérance clic
+                        match = dir;
+                        break;
+                    }
+                }
+                if (match != null) {
+                    if (controller.RecalculerCheminVers(match.getPoint())) {
+                        controller.DeselectionnerIntersection();
+                        intersectionFilSelectionnee = null;
+                        rafraichirVue();
+                        return;
+                    } else {
+                        javax.swing.JOptionPane.showMessageDialog(this,
+                            "Erreur lors du recalcul du chemin.",
+                            "Erreur",
+                            javax.swing.JOptionPane.ERROR_MESSAGE);
+                        rafraichirVue();
+                        return;
+                    }
+                }
+            }
+
             if (controller.SelectionnerIntersectionFil(positionMonde)) {
                 intersectionFilSelectionnee = controller.ObtenirIntersectionSelectionnee();
                 System.out.println("Intersection sélectionnée: " + intersectionFilSelectionnee);
@@ -1830,29 +1858,6 @@ JPanel row(String label, JTextField ft, JTextField in, JTextField num, JTextFiel
         // Note: La validation des contraintes est automatique et affichée dans la console
         // Voir Piece.regenererFilSiNecessaire() -> validerContraintes()
         
-        // Vérifier si le fil a utilisé toute sa longueur
-        Domaine.Entite.Fil fil = controller.ObtenirFilChauffant();
-        if (fil != null) {
-            int longueurRestante = fil.getLongueurRestante();
-            if (longueurRestante > 0) {
-                double longueurRestantePieds = longueurRestante / 12.0;
-                javax.swing.JOptionPane.showMessageDialog(this,
-                    String.format("⚠️ ATTENTION: Le fil n'a pas pu utiliser toute sa longueur!\n\n" +
-                                  "Longueur totale: %.1f pieds\n" +
-                                  "Longueur utilisée: %.1f pieds\n" +
-                                  "Longueur restante: %.1f pieds\n\n" +
-                                  "Le fil ne peut pas être coupé. Considérez:\n" +
-                                  "- Ajuster l'espacement de la membrane\n" +
-                                  "- Modifier la disposition des meubles\n" +
-                                  "- Utiliser un fil plus court",
-                                  longueurMaxPouces / 12.0,
-                                  fil.getLongueurActuelle() / 12.0,
-                                  longueurRestantePieds),
-                    "Longueur de fil non utilisée",
-                    javax.swing.JOptionPane.WARNING_MESSAGE);
-            }
-        }
-        
         rafraichirVue();
 
     }
@@ -1983,7 +1988,7 @@ JPanel row(String label, JTextField ft, JTextField in, JTextField num, JTextFiel
         // Créer une liste de choix avec les noms de directions
         String[] choix = new String[directions.size()];
         for (int i = 0; i < directions.size(); i++) {
-            choix[i] = directions.get(i).toString();
+            choix[i] = directions.get(i).getNom();
         }
         
         // Afficher le dialogue de sélection
@@ -2001,7 +2006,7 @@ JPanel row(String label, JTextField ft, JTextField in, JTextField num, JTextFiel
             // Trouver la direction correspondante
             Domaine.Entite.GestionnaireCheminFil.DirectionDisponible directionChoisie = null;
             for (Domaine.Entite.GestionnaireCheminFil.DirectionDisponible dir : directions) {
-                if (dir.toString().equals(selectionStr)) {
+                if (dir.getNom().equals(selectionStr)) {
                     directionChoisie = dir;
                     break;
                 }
