@@ -1,10 +1,8 @@
 
 package Domaine.Entite;
 
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Graphics2D;
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -68,6 +66,45 @@ public class Membrane implements Cloneable, Serializable {
         String cle = genererCle(pointOriginal);
         intersectionsTranslates.put(cle, new Point(nouvellePosition));
         return true;
+    }
+
+    public boolean translaterZone(Rectangle zoneMonde, Point delta) {
+        if (zoneMonde == null || delta == null) {
+            return false;
+        }
+
+        boolean modifie = false;
+
+        for (int x = margeContour; x <= largeurPiece - margeContour; x += espacement) {
+            for (int y = margeContour; y <= longueurPiece - margeContour; y += espacement) {
+                Point pointOriginal = new Point(x, y);
+                if (!zoneMonde.contains(pointOriginal)) {
+                    continue;
+                }
+
+                Point cible = new Point(pointOriginal.x + delta.x, pointOriginal.y + delta.y);
+
+                // Ne pas sortir de la pièce réelle
+                if (!estDansPiece(cible, 0)) {
+                    continue;
+                }
+
+                String cle = genererCle(pointOriginal);
+                intersectionsTranslates.put(cle, cible);
+                modifie = true;
+            }
+        }
+
+        return modifie;
+    }
+
+    public boolean translaterMembrane(Point delta) {
+        if (delta == null || (delta.x == 0 && delta.y == 0)) {
+            return false;
+        }
+
+        Rectangle zoneComplete = new Rectangle(margeContour, margeContour, largeurPiece - 2 * margeContour, longueurPiece - 2 * margeContour);
+        return translaterZone(zoneComplete, delta);
     }
     
     //Réinitialise une intersection translatée à sa position d'origine
