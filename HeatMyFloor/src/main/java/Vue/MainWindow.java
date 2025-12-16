@@ -1001,21 +1001,7 @@ choixLeftPanelLayout.setVerticalGroup(
         }
     }
 
-    // Helper to build a row: label + 4 fields
-    JPanel row(String label, JTextField ft, JTextField in, JTextField num, JTextField den) {
-        JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT, 3, 2));
-        p.add(new JLabel(label));
-        p.add(new JLabel("ft"));
-        p.add(ft);
-        p.add(new JLabel("in"));
-        p.add(in);
-        p.add(new JLabel("  "));
-        p.add(num);
-        p.add(new JLabel("/"));
-        p.add(den);
-        p.setBorder(BorderFactory.createTitledBorder(""));
-        return p;
-    }
+
 
     private void zoomInButtonActionPerformed(java.awt.event.ActionEvent evt) {
         Point center = new Point(drawingPanel.getWidth() / 2, drawingPanel.getHeight() / 2);
