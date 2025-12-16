@@ -580,12 +580,14 @@ public class TraceurFil {
                         return filExistant;
                     }
                     
-                    // Transition vers la nouvelle ligne
+                    // Transition vers la nouvelle ligne - CORRECTION: utiliser un point sur la grille
                     Point dernierPoint = filExistant.getChemin().get(filExistant.getChemin().size() - 1);
-                    Point pointTransition = new Point(dernierPoint.x, inter.y);
+                    Point pointTransition = trouverPointTransitionSurGrille(dernierPoint, inter.y);
                     
-                    if (!pointTransition.equals(dernierPoint) && estPointValide(pointTransition) &&
-                            estSegmentValide(dernierPoint, pointTransition)) {
+                    if (pointTransition != null && !pointTransition.equals(dernierPoint) && 
+                        estPointValide(pointTransition) &&
+                        estSegmentValide(dernierPoint, pointTransition) &&
+                        !estPointDejaVisite(filExistant.getChemin(), pointTransition)) {
                         filExistant.ajouterSegment(pointTransition);
                     }
                     
