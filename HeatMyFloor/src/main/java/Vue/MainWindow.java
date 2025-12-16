@@ -137,6 +137,16 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JTextField filLongueurMaxJText;
     private javax.swing.JTextField filLongueurSegmentMaxJText;
 
+    // Membrane UI
+    private javax.swing.JLabel membraneEspacementLabel;
+    private javax.swing.JLabel membraneMargeLabel;
+    private javax.swing.JLabel membraneOffsetXLabel;
+    private javax.swing.JLabel membraneOffsetYLabel;
+    private javax.swing.JTextField membraneEspacementText;
+    private javax.swing.JTextField membraneMargeText;
+    private javax.swing.JTextField membraneOffsetXText;
+    private javax.swing.JTextField membraneOffsetYText;
+
     // Position point
     private javax.swing.JLabel CoordonneesTitreJLabel;
     private javax.swing.JLabel CoordonneesPositionXTitreJLabel;
@@ -339,7 +349,7 @@ public class MainWindow extends javax.swing.JFrame {
 
         translationMembraneButton.setText("Translation Membrane");
         translationMembraneButton.addActionListener((java.awt.event.ActionEvent evt) -> {
-            //toggleModeTranslation();
+            translaterMembrane();
         });
 
         supprimerMeubleButton.setText("Supprimer");
@@ -530,6 +540,18 @@ public class MainWindow extends javax.swing.JFrame {
         redimXJText = new JTextField();
         redimYJText = new JTextField();
         redimPieceJButton = new JButton("Redimensionner");
+        redimPieceJButton.addActionListener((java.awt.event.ActionEvent evt) -> {
+            redimensionnerPieceActionPerformed();
+        });
+
+        membraneEspacementLabel = new JLabel("Espacement membrane (po)");
+        membraneMargeLabel = new JLabel("Marge membrane (po)");
+        membraneOffsetXLabel = new JLabel("Offset X (po)");
+        membraneOffsetYLabel = new JLabel("Offset Y (po)");
+        membraneEspacementText = new JTextField("6");
+        membraneMargeText = new JTextField("3");
+        membraneOffsetXText = new JTextField("0");
+        membraneOffsetYText = new JTextField("0");
 
 choixLeftPanelLayout.setHorizontalGroup(
         choixLeftPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -639,6 +661,26 @@ choixLeftPanelLayout.setVerticalGroup(
                                 .addComponent(longueurElementDenJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addGap(12)
                         .addComponent(largeurLabel)
+                        .addGap(15)
+                        .addComponent(membraneEspacementLabel)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(choixRightPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(membraneEspacementText))
+                        .addGap(10)
+                        .addComponent(membraneMargeLabel)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(choixRightPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(membraneMargeText))
+                        .addGap(10)
+                        .addComponent(membraneOffsetXLabel)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(choixRightPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(membraneOffsetXText))
+                        .addGap(10)
+                        .addComponent(membraneOffsetYLabel)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(choixRightPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(membraneOffsetYText))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(choixLeftPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                                 .addComponent(largeurPiedJText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -774,6 +816,22 @@ choixLeftPanelLayout.setVerticalGroup(
                                             .addComponent(redimYJText, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
                                         )
                                         .addComponent(redimPieceJButton, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(membraneEspacementLabel)
+                                        .addGroup(choixRightPanelLayout.createSequentialGroup()
+                                            .addComponent(membraneEspacementText, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        )
+                                        .addComponent(membraneMargeLabel)
+                                        .addGroup(choixRightPanelLayout.createSequentialGroup()
+                                            .addComponent(membraneMargeText, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        )
+                                        .addComponent(membraneOffsetXLabel)
+                                        .addGroup(choixRightPanelLayout.createSequentialGroup()
+                                            .addComponent(membraneOffsetXText, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        )
+                                        .addComponent(membraneOffsetYLabel)
+                                        .addGroup(choixRightPanelLayout.createSequentialGroup()
+                                            .addComponent(membraneOffsetYText, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        )
                                         .addComponent(filTitreLabel)
                                         .addComponent(filLongueurMaxLabel)
                                         .addGroup(choixRightPanelLayout.createSequentialGroup()
@@ -1483,6 +1541,35 @@ choixLeftPanelLayout.setVerticalGroup(
         ErreurJLabel.setText("Erreur: " + message);
     }
 
+    private void redimensionnerPieceActionPerformed() {
+        String largeurText = redimXJText.getText().trim();
+        String longueurText = redimYJText.getText().trim();
+
+        int largeurPouces;
+        int longueurPouces;
+
+        try {
+            largeurPouces = Integer.parseInt(largeurText);
+            longueurPouces = Integer.parseInt(longueurText);
+        } catch (NumberFormatException ex) {
+            afficherErreur("Valeurs invalides pour le redimensionnement de la pièce.");
+            return;
+        }
+
+        if (largeurPouces <= 0 || longueurPouces <= 0) {
+            afficherErreur("Les dimensions doivent être supérieures à 0.");
+            return;
+        }
+
+        boolean ok = controller.RedimensionnerPiece(largeurPouces, longueurPouces);
+        if (!ok) {
+            afficherErreur("Redimensionnement impossible.");
+        } else {
+            ErreurJLabel.setText("");
+            rafraichirVue();
+        }
+    }
+
     private void rafraichirVue() {
         drawingPanel.repaint();
     }
@@ -1679,7 +1766,46 @@ choixLeftPanelLayout.setVerticalGroup(
             return;
         }
 
-        controller.InitialiserMembrane(6, 3);
+        int espacement;
+        int marge;
+        try {
+            espacement = Integer.parseInt(membraneEspacementText.getText().trim());
+            marge = Integer.parseInt(membraneMargeText.getText().trim());
+        } catch (NumberFormatException ex) {
+            afficherErreur("Valeurs invalides pour la membrane (espacement/marge).");
+            return;
+        }
+
+        if (espacement <= 0 || marge < 0) {
+            afficherErreur("Espacement doit être > 0 et marge >= 0.");
+            return;
+        }
+
+        controller.InitialiserMembrane(espacement, marge);
+
+        // Appliquer offset actuel si fourni
+        translaterMembrane();
+
+        rafraichirVue();
+    }
+
+    private void translaterMembrane() {
+        if (controller.ObtenirMembrane() == null) {
+            afficherErreur("Activez la membrane avant de la translater.");
+            return;
+        }
+
+        int offsetX;
+        int offsetY;
+        try {
+            offsetX = Integer.parseInt(membraneOffsetXText.getText().trim());
+            offsetY = Integer.parseInt(membraneOffsetYText.getText().trim());
+        } catch (NumberFormatException ex) {
+            afficherErreur("Offsets invalides pour la translation.");
+            return;
+        }
+
+        controller.DeplacerMembrane(offsetX, offsetY);
         rafraichirVue();
     }
 
