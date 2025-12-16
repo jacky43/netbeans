@@ -388,26 +388,28 @@ public class TraceurFil {
 
     
     private boolean estSegmentValide(Point p1, Point p2){
-        
+        // Si aucun obstacle, pas de restriction
         if(meubles.isEmpty() && elementsChauffants.isEmpty()){
             return true;
         }
-        
-          if(!estPointLibreObstacles(p2)){
+
+        // Vérifier les deux extrémités
+        if(!estPointLibreObstacles(p1) || !estPointLibreObstacles(p2)){
             return false;
         }
-        //verifier plusiers point intermediaire
+
+        // Échantillonnage fin (1 pouce) pour éviter de traverser un meuble lorsque les segments sont courts
         int steps = Math.max(Math.abs(p2.x - p1.x), Math.abs(p2.y - p1.y));
-        if(steps <= 6){
+        int pas = 1; // pouce
+        if (steps == 0) {
             return true;
         }
-        
-        int nbEchantillons = steps / 3;
+
+        int nbEchantillons = steps / pas;
         for(int i = 0; i <= nbEchantillons; i++){
-            double ratio = (double) i / steps;
+            double ratio = (double) i / nbEchantillons;
             int x = (int) Math.round(p1.x + ratio * (p2.x - p1.x));
             int y = (int) Math.round(p1.y + ratio * (p2.y - p1.y));
-            
             if(!estPointLibreObstacles(new Point(x, y))){
                 return false;
             }
