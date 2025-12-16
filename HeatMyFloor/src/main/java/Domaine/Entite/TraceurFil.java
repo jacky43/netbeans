@@ -242,10 +242,10 @@ public class TraceurFil {
         
         // Maintenant traiter tous les points de la ligne (sans points intermédiaires)
         for (Point p : ligne) {
-            // CONTRAINTE #8: INTERDICTION STRICTE de tout passage double
+            // CONTRAINTE #8: Si le point est déjà visité, ignorer mais continuer
             if (estPointDejaVisite(cheminExistant, p)) {
-                System.out.println("❌ CONTRAINTE #8 VIOLÉE: Point déjà visité, segment refusé: " + p);
-                return false; // ARRÊT COMPLET si on tente de repasser
+                System.out.println("⚠️ Point déjà visité, ignoré: " + p);
+                continue; // IGNORER ce point mais continuer avec les autres
             }
             
             // Si c'est le premier point et qu'on l'a déjà ajouté, passer
@@ -269,8 +269,8 @@ public class TraceurFil {
             
             // CONTRAINTE #7: Vérifier que le segment ne croise aucun segment existant
             if (verifierCroisementAvecChemin(dernierPoint, p, cheminExistant)) {
-                System.out.println("❌ CONTRAINTE #7 VIOLÉE: Segment croise le chemin existant, refusé");
-                return false;
+                System.out.println("❌ CONTRAINTE #7 VIOLÉE: Segment croise le chemin existant, ignoré");
+                continue; // IGNORER mais continuer
             }
             
             // Vérifier que le segment ne traverse aucun obstacle
