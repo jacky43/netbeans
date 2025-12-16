@@ -71,23 +71,21 @@ public class GestionnaireCheminFil {
         ArrayList<Point> intersections = menbrane.ObtenirIntersections();
         int espacement = menbrane.getEspacement();
         
-        // Vérifier les 4 directions cardinales et les diagonales si nécessaire
+        // Uniquement les directions cardinales (pas de diagonales)
         int[][] deplacements = {
             {espacement, 0},      // Droite
             {-espacement, 0},     // Gauche
             {0, espacement},      // Bas
-            {0, -espacement},     // Haut
-            {espacement, espacement},   // Diagonale bas-droite
-            {-espacement, espacement},  // Diagonale bas-gauche
-            {espacement, -espacement},  // Diagonale haut-droite
-            {-espacement, -espacement}  // Diagonale haut-gauche
+            {0, -espacement}      // Haut
         };
         
         for (int[] deplacement : deplacements) {
             Point nouveauPoint = new Point(pointActuel.x + deplacement[0], pointActuel.y + deplacement[1]);
             
-            // Vérifier si le point est valide
-            if (estPointDisponible(nouveauPoint, intersections)) {
+            // Vérifier si le point est valide, joignable sans obstacle et non déjà utilisé
+            if (estPointDisponible(nouveauPoint, intersections)
+                && traceur.estSegmentValide(pointActuel, nouveauPoint)
+                && !pointDejaDansChemin(nouveauPoint)) {
                 String nomDirection = determinerNomDirection(deplacement);
                 directions.add(new DirectionDisponible(nouveauPoint, nomDirection));
             }
@@ -113,12 +111,32 @@ public class GestionnaireCheminFil {
             nouveauFil.ajouterSegment(cheminActuel.get(i));
         }
         
-        // Ajouter le nouveau segment vers la nouvelle direction
+        // Ajouter le nouveau segment vers la nouvelle direction (orthogonal uniquement)
         Point pointActuel = cheminActuel.get(indexIntersectionSelectionnee);
+        if (nouvelleDirection == null || !(pointActuel.x == nouvelleDirection.x || pointActuel.y == nouvelleDirection.y)) {
+            System.out.println("Nouvelle direction non orthogonale, refusée");
+            return fil;
+        }
+
+        if (pointDejaDansChemin(nouvelleDirection)) {
+            System.out.println("Point déjà utilisé dans le chemin, refusé");
+            return fil;
+        }
+
+        if (!traceur.estSegmentValide(pointActuel, nouvelleDirection)) {
+            System.out.println("Segment bloqué par un obstacle, refusé");
+            return fil;
+        }
+
+        if (verifierCroisementAvecChemin(pointActuel, nouvelleDirection, nouveauFil.getChemin())) {
+            System.out.println("Croisement détecté, refus de la direction");
+            return fil;
+        }
+
         if (nouveauFil.getChemin().isEmpty() || !nouveauFil.getChemin().get(nouveauFil.getChemin().size() - 1).equals(pointActuel)) {
             nouveauFil.ajouterSegment(pointActuel);
         }
-        
+
         if (!nouveauFil.ajouterSegment(nouvelleDirection)) {
             System.out.println("Impossible d'ajouter le segment vers la nouvelle direction");
             return fil; // Retourner l'ancien fil si échec
@@ -147,6 +165,48 @@ public class GestionnaireCheminFil {
         
         // Vérifier que le point est valide selon les contraintes
         return traceur.estPointValide(point);
+    }
+
+    // Vérifie si le point existe déjà dans le chemin courant
+    private boolean pointDejaDansChemin(Point p) {
+        for (Point existant : fil.getChemin()) {
+            if (existant.equals(p)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Vérifie si le segment croise le chemin existant (copié de TraceurFil)
+    private boolean verifierCroisementAvecChemin(Point nouveauDebut, Point nouvelleFin, ArrayList<Point> chemin) {
+        if (chemin.size() < 2) {
+            return false;
+        }
+        for (int i = 0; i < chemin.size() - 2; i++) {
+            Point segmentDebut = chemin.get(i);
+            Point segmentFin = chemin.get(i + 1);
+            if (segmentsSeCroisent(nouveauDebut, nouvelleFin, segmentDebut, segmentFin)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean segmentsSeCroisent(Point p1, Point p2, Point p3, Point p4) {
+        if (p1.equals(p3) || p1.equals(p4) || p2.equals(p3) || p2.equals(p4)) {
+            return false;
+        }
+        int o1 = orientation(p1, p2, p3);
+        int o2 = orientation(p1, p2, p4);
+        int o3 = orientation(p3, p4, p1);
+        int o4 = orientation(p3, p4, p2);
+        return o1 != o2 && o3 != o4;
+    }
+
+    private int orientation(Point p, Point q, Point r) {
+        int val = (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
+        if (val == 0) return 0;
+        return (val > 0) ? 1 : 2;
     }
     
     //Détermine le nom de la direction en fonction du déplacement
