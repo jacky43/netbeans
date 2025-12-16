@@ -70,6 +70,59 @@ public class Piece implements Cloneable, Serializable {
        //regener le fil
         regenererFilSiNecessaire();
     }
+
+    public boolean Redimensionner(int nouvelleLargeurPouces, int nouvelleLongueurPouces) {
+        if (forme == null || nouvelleLargeurPouces <= 0 || nouvelleLongueurPouces <= 0) {
+            return false;
+        }
+
+        Rectangle bounds = forme.getBounds();
+        double largeurActuelle = bounds.getWidth();
+        double longueurActuelle = bounds.getHeight();
+
+        if (largeurActuelle == 0 || longueurActuelle == 0) {
+            return false;
+        }
+
+        double scaleX = nouvelleLargeurPouces / largeurActuelle;
+        double scaleY = nouvelleLongueurPouces / longueurActuelle;
+
+        int minX = bounds.x;
+        int minY = bounds.y;
+
+        // Redimensionner la forme
+        int[] nouveauxX = new int[forme.npoints];
+        int[] nouveauxY = new int[forme.npoints];
+        for (int i = 0; i < forme.npoints; i++) {
+            nouveauxX[i] = minX + (int) Math.round((forme.xpoints[i] - minX) * scaleX);
+            nouveauxY[i] = minY + (int) Math.round((forme.ypoints[i] - minY) * scaleY);
+        }
+        forme = new Polygon(nouveauxX, nouveauxY, forme.npoints);
+
+        // Redimensionner positions/dimensions des éléments pour rester cohérents visuellement
+        for (ElementSelectionnable element : elements) {
+            Point pos = element.getPosition();
+            int nouvellePosX = minX + (int) Math.round((pos.x - minX) * scaleX);
+            int nouvellePosY = minY + (int) Math.round((pos.y - minY) * scaleY);
+            element.setPosition(new Point(nouvellePosX, nouvellePosY));
+
+            int nouvelleLargeur = Math.max(1, (int) Math.round(element.getLargeur() * scaleX));
+            int nouvelleLongueur = Math.max(1, (int) Math.round(element.getLongueur() * scaleY));
+            element.setLargeur(nouvelleLargeur);
+            element.setLongueur(nouvelleLongueur);
+        }
+
+        // Mettre à jour dimensions réelles et régénérer membrane/fil
+        largeurReellePouces = nouvelleLargeurPouces;
+        longueurReellePouces = nouvelleLongueurPouces;
+
+        if (membrane != null) {
+            membrane = new Membrane(largeurReellePouces, longueurReellePouces, membrane.getEspacement(), membrane.getMargeContour(), forme);
+        }
+
+        regenererFilSiNecessaire();
+        return true;
+    }
     
     public int getLargeurPouces(){
         return largeurReellePouces;
@@ -315,9 +368,15 @@ public class Piece implements Cloneable, Serializable {
         int largeur = largeurReellePouces > 0 ? largeurReellePouces : (int) Math.round(bounds.getWidth());
         int longueur = longueurReellePouces > 0 ? longueurReellePouces : (int) Math.round(bounds.getHeight());
         //membrane = new Membrane((int)bounds.getWidth(), (int)bounds.getHeight(), espacement, marge);
-        membrane = new Membrane(largeur, longueur, espacement, marge);
+        membrane = new Membrane(largeur, longueur, espacement, marge, forme);
         
         //regener le fil
+        regenererFilSiNecessaire();
+    }
+
+    public void DeplacerMembrane(int offsetX, int offsetY) {
+        if (membrane == null) return;
+        membrane.setOffset(offsetX, offsetY);
         regenererFilSiNecessaire();
     }
     
