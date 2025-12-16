@@ -8,6 +8,7 @@ import java.awt.Point;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 
 public class Membrane implements Cloneable, Serializable {
@@ -98,6 +99,20 @@ public class Membrane implements Cloneable, Serializable {
      */
     private String genererCle(Point point) {
         return point.x + "," + point.y;
+    }
+
+    private Point lireCle(String cle) {
+        String[] parties = cle.split(",");
+        if (parties.length != 2) {
+            return new Point(0, 0);
+        }
+        try {
+            int x = Integer.parseInt(parties[0]);
+            int y = Integer.parseInt(parties[1]);
+            return new Point(x, y);
+        } catch (NumberFormatException ex) {
+            return new Point(0, 0);
+        }
     }
     
     // Trouve le point de grille le plus proche d'une position donnéeui 
@@ -211,6 +226,16 @@ public class Membrane implements Cloneable, Serializable {
         double projY = segmentDebut.y + t * dy;
 
         return point.distance(projX, projY);
+    }
+
+    public ArrayList<Point[]> obtenirIntersectionsDeplacees() {
+        ArrayList<Point[]> deplacements = new ArrayList<>();
+        for (Map.Entry<String, Point> entree : intersectionsTranslates.entrySet()) {
+            Point origine = lireCle(entree.getKey());
+            Point cible = entree.getValue();
+            deplacements.add(new Point[]{origine, new Point(cible)});
+        }
+        return deplacements;
     }
     
     @Override
