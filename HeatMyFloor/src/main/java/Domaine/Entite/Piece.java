@@ -90,12 +90,22 @@ public class Piece implements Cloneable, Serializable {
         int minX = bounds.x;
         int minY = bounds.y;
 
-        // Redimensionner la forme
+        // Si polygone irrégulier (plus de 4 points), on applique un scale uniforme pour conserver la forme
+        boolean conserverForme = forme.npoints > 4;
+        double scale = conserverForme ? Math.min(scaleX, scaleY) : 0.0;
+        double centreX = minX + largeurActuelle / 2.0;
+        double centreY = minY + longueurActuelle / 2.0;
+
         int[] nouveauxX = new int[forme.npoints];
         int[] nouveauxY = new int[forme.npoints];
         for (int i = 0; i < forme.npoints; i++) {
-            nouveauxX[i] = minX + (int) Math.round((forme.xpoints[i] - minX) * scaleX);
-            nouveauxY[i] = minY + (int) Math.round((forme.ypoints[i] - minY) * scaleY);
+            if (conserverForme) {
+                nouveauxX[i] = (int) Math.round(centreX + (forme.xpoints[i] - centreX) * scale);
+                nouveauxY[i] = (int) Math.round(centreY + (forme.ypoints[i] - centreY) * scale);
+            } else {
+                nouveauxX[i] = minX + (int) Math.round((forme.xpoints[i] - minX) * scaleX);
+                nouveauxY[i] = minY + (int) Math.round((forme.ypoints[i] - minY) * scaleY);
+            }
         }
         forme = new Polygon(nouveauxX, nouveauxY, forme.npoints);
 
