@@ -292,10 +292,10 @@ public class TraceurFil {
         
         // Maintenant traiter tous les points de la ligne (sans points intermédiaires)
         for (Point p : ligne) {
-            // CONTRAINTE #8: Si le point est déjà visité, ignorer et poursuivre (évite d'arrêter toute la ligne)
+            // CONTRAINTE #8: Si le point est déjà visité, on stoppe la ligne pour éviter de repasser
             if (estPointDejaVisite(cheminExistant, p)) {
-                System.out.println("⚠️ Point déjà visité, ignoré: " + p);
-                continue; // ignorer ce point mais continuer à traiter la ligne
+                System.out.println("❌ Point déjà visité, arrêt de la ligne: " + p);
+                return false; // Stopper pour éviter de reboucler sur le chemin existant
             }
             
             // Si c'est le premier point et qu'on l'a déjà ajouté, passer
