@@ -130,13 +130,17 @@ public class TraceurFil {
         if(intersectionsValides.isEmpty()){
             return fil;
         }
-        //trouver le point de la grille le plus proche du thermostat
+        // trouver le point de la grille le plus proche du thermostat
         Point pointDepart = trouverPointLePlusProche(thermostat, intersectionsValides);
-        
-        //Connecter le thermostat au premier point 
-        if(pointDepart != null && estSegmentValide(thermostat, pointDepart)){
-            fil.ajouterSegment(pointDepart);
-            intersectionsValides.remove(pointDepart);
+
+        // Connecter le thermostat au premier point SANS diagonale
+        if (pointDepart != null) {
+            if (connecterThermostatOrthogonal(fil, thermostat, pointDepart, intersectionsValides)) {
+                intersectionsValides.remove(pointDepart);
+            } else {
+                System.out.println("❌ Impossible de connecter le thermostat au point de départ sans diagonale");
+                return fil;
+            }
         }
         
         // Trier par ligne (y) puis par colonne (x) pour créer un serpentin
@@ -233,6 +237,50 @@ public class TraceurFil {
         }
         return plusProche;
     }
+
+    // Connecte le thermostat au point de départ uniquement avec des segments orthogonaux
+    private boolean connecterThermostatOrthogonal(Fil fil, Point thermostat, Point cible, ArrayList<Point> intersections) {
+        // Si déjà aligné, tenter le segment direct
+        if (thermostat.x == cible.x || thermostat.y == cible.y) {
+            if (estSegmentValide(thermostat, cible) && !verifierCroisementAvecChemin(thermostat, cible, fil.getChemin())) {
+                return fil.ajouterSegment(cible);
+            }
+        }
+
+        // Sinon, chercher un point de grille aligné (même x ou même y que le thermostat)
+        Point meilleurPoint = null;
+        int bestDist = Integer.MAX_VALUE;
+        for (Point inter : intersections) {
+            boolean aligne = inter.x == thermostat.x || inter.y == thermostat.y;
+            if (!aligne) { continue; }
+            if (!estPointValide(inter)) { continue; }
+            int d = Math.abs(inter.x - thermostat.x) + Math.abs(inter.y - thermostat.y) +
+                    Math.abs(inter.x - cible.x) + Math.abs(inter.y - cible.y);
+            if (d < bestDist) {
+                bestDist = d;
+                meilleurPoint = inter;
+            }
+        }
+
+        if (meilleurPoint == null) {
+            return false;
+        }
+
+        // Deux segments orthogonaux: thermostat -> pivot, pivot -> cible
+        if (!estSegmentValide(thermostat, meilleurPoint) ||
+            verifierCroisementAvecChemin(thermostat, meilleurPoint, fil.getChemin())) {
+            return false;
+        }
+        if (!estSegmentValide(meilleurPoint, cible) ||
+            verifierCroisementAvecChemin(meilleurPoint, cible, fil.getChemin())) {
+            return false;
+        }
+
+        if (!fil.ajouterSegment(meilleurPoint)) {
+            return false;
+        }
+        return fil.ajouterSegment(cible);
+    }
     
        private boolean ajouterLigneAvecContrainte(Fil fil, ArrayList<Point> ligne) {
         if (ligne.isEmpty()) {
@@ -244,10 +292,10 @@ public class TraceurFil {
         
         // Maintenant traiter tous les points de la ligne (sans points intermédiaires)
         for (Point p : ligne) {
-            // CONTRAINTE #8: Si le point est déjà visité, ignorer mais continuer
+            // CONTRAINTE #8: Si le point est déjà visité, ignorer et poursuivre (évite d'arrêter toute la ligne)
             if (estPointDejaVisite(cheminExistant, p)) {
-                System.out.println("❌ Point déjà visité, arrêt de la ligne: " + p);
-                return false; // Stopper pour éviter de reboucler sur le chemin existant
+                System.out.println("⚠️ Point déjà visité, ignoré: " + p);
+                continue; // ignorer ce point mais continuer à traiter la ligne
             }
             
             // Si c'est le premier point et qu'on l'a déjà ajouté, passer
