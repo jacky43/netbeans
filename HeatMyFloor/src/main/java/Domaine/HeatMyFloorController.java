@@ -145,7 +145,7 @@ public class HeatMyFloorController {
             
             // Régénérer le fil après modification d'élément chauffant ou thermostat
             // Note: On appelle ModifierElementSelectionne de Piece qui déclenche regenererFilSiNecessaire()
-            maPiece.ModifierElementSelectionne(null, null, null);
+            maPiece.ModifierElementSelectionne(nouvellePosition, nouvelleLargeur, nouvelleLongueur);
             return true;
         }
         return maPiece.ModifierElementSelectionne(nouvellePosition, nouvelleLargeur, nouvelleLongueur);
@@ -319,18 +319,15 @@ public class HeatMyFloorController {
         if (succes) {
             System.out.println("Translation réussie: " + pointGrille + " -> " + nouvellePosition);
             
-            // IMPORTANT: Régénérer le fil car la grille a été modifiée
-            if (maPiece.getThermostat() != null && maPiece.getFilChauffant() != null) {
-                // Obtenir les paramètres du fil existant pour le recalcul
+            // Régénérer le fil car la grille a été modifiée
+            if (maPiece.getThermostat() != null) {
                 Fil filActuel = maPiece.getFilChauffant();
-                int longueurMax = filActuel.getLongueurMaximale();
-                
-                // Régénérer avec les mêmes paramètres
-                // Note: la distance max ligne droite est stockée dans TraceurFil, on utilise une valeur par défaut
+                int longueurMax = filActuel != null ? filActuel.getLongueurMaximale() : 0;
                 TraceurFil traceur = new TraceurFil(membrane, maPiece.getMeubles(), maPiece.getElements(), 120);
                 Fil nouveauFil = traceur.tracerFilAutomatique(maPiece.getThermostat().getPosition(), longueurMax);
-                maPiece.SupprimerFilChauffant();
-                // Le nouveau fil sera assigné via TracerFilChauffant
+                if (nouveauFil != null) {
+                    maPiece.setFilChauffant(nouveauFil);
+                }
             }
         }
         
