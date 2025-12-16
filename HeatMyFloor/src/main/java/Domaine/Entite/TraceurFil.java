@@ -238,7 +238,8 @@ public class TraceurFil {
         return plusProche;
     }
 
-    // Connecte le thermostat au point de départ uniquement avec des segments orthogonaux
+    // Connecte le thermostat au point de départ. Préférence orthogonale, mais autorise
+    // exceptionnellement un segment diagonal direct si aucun chemin orthogonal n'est possible.
     private boolean connecterThermostatOrthogonal(Fil fil, Point thermostat, Point cible, ArrayList<Point> intersections) {
         // Si déjà aligné, tenter le segment direct
         if (thermostat.x == cible.x || thermostat.y == cible.y) {
@@ -263,6 +264,10 @@ public class TraceurFil {
         }
 
         if (meilleurPoint == null) {
+            // Aucun pivot orthogonal possible: autoriser un unique segment diagonal thermostat -> cible
+            if (estSegmentValide(thermostat, cible) && !verifierCroisementAvecChemin(thermostat, cible, fil.getChemin())) {
+                return fil.ajouterSegment(cible);
+            }
             return false;
         }
 
