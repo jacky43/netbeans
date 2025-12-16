@@ -383,7 +383,13 @@ public class Piece implements Cloneable, Serializable {
     public MembraneDTO getMembrane() {
         if(membrane !=null)
         {
-            return new MembraneDTO(membrane.getLargeurPiece(),membrane.getLongueurPiece(),membrane.getEspacement(),membrane.getMargeContour());
+            return new MembraneDTO(
+                    membrane.getLargeurPiece(),
+                    membrane.getLongueurPiece(),
+                    membrane.getEspacement(),
+                    membrane.getMargeContour(),
+                    membrane.getOffsetX(),
+                    membrane.getOffsetY());
         }
         
         return null;
