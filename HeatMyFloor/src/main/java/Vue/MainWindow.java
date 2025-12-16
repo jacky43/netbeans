@@ -927,7 +927,7 @@ JPanel row(String label, JTextField ft, JTextField in, JTextField num, JTextFiel
                     controller.ObtenirDirectionsDisponibles();
                 Domaine.Entite.GestionnaireCheminFil.DirectionDisponible match = null;
                 for (Domaine.Entite.GestionnaireCheminFil.DirectionDisponible dir : directionsActives) {
-                    if (positionMonde.distance(dir.getPoint()) <= 5) { // tolérance clic
+                    if (positionMonde.distance(dir.getPoint()) <= 2) { // tolérance réduite
                         match = dir;
                         break;
                     }
@@ -1968,7 +1968,7 @@ JPanel row(String label, JTextField ft, JTextField in, JTextField num, JTextFiel
             selectionCheminButton.setText("✓ Sélection Active");
             selectionCheminButton.setBackground(new java.awt.Color(173, 216, 230)); // Bleu clair
             javax.swing.JOptionPane.showMessageDialog(this,
-                "Mode sélection manuelle activé.\nCliquez sur une intersection du fil pour voir les directions disponibles.",
+                "Mode sélection manuelle activé.\nCliquez sur une intersection du fil, puis cliquez sur l'une des intersections voisines (Haut/Bas/Gauche/Droite).",
                 "Info",
                 javax.swing.JOptionPane.INFORMATION_MESSAGE);
         } else {
