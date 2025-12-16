@@ -167,10 +167,15 @@ public class TraceurFil {
                     }
                     if (ligneActuelle != inter.y) {
                         Point dernierPoint = fil.getChemin().get(fil.getChemin().size() - 1);
-                        Point pointTransition = new Point(dernierPoint.x, inter.y);
                         
-                        if(!pointTransition.equals(dernierPoint) && estPointValide(pointTransition) &&
-                                estSegmentValide(dernierPoint, pointTransition)){
+                        // CORRECTION: Le point de transition doit être sur la grille, pas diagonal
+                        // On cherche le point de la grille le plus proche sur la nouvelle ligne
+                        Point pointTransition = trouverPointTransitionSurGrille(dernierPoint, inter.y);
+                        
+                        if(pointTransition != null && !pointTransition.equals(dernierPoint) && 
+                           estPointValide(pointTransition) &&
+                           estSegmentValide(dernierPoint, pointTransition) &&
+                           !estPointDejaVisite(fil.getChemin(), pointTransition)){
                             fil.ajouterSegment(pointTransition);
                         }
                     } 
@@ -193,8 +198,8 @@ public class TraceurFil {
             }
             ajouterLigneAvecContrainte(fil, ligneCourante);
         }
-
-         // CONTRAINTE #11: Vérifier si toute la longueur a été utilisée
+        
+        // CONTRAINTE #11: Vérifier si toute la longueur a été utilisée
         int longueurUtilisee = fil.getLongueurActuelle();
         int longueurRestante = fil.getLongueurRestante();
         double pourcentageUtilise = (longueurUtilisee * 100.0) / longueurMax;
@@ -207,7 +212,7 @@ public class TraceurFil {
         } else {
             System.out.println("✓ Fil tracé avec succès: " + longueurUtilisee + " pouces utilisés sur " + longueurMax);
         }
-         
+        
         return fil;
     }
     
@@ -237,18 +242,10 @@ public class TraceurFil {
         
         // Maintenant traiter tous les points de la ligne (sans points intermédiaires)
         for (Point p : ligne) {
-            // CRITIQUE: Vérifier si ce point est déjà dans le chemin (éviter superposition)
-            boolean pointDejaUtilise = false;
-            for (Point pointChemin : cheminExistant) {
-                if (pointChemin.equals(p)) {
-                    pointDejaUtilise = true;
-                    break;
-                }
-            }
-            
-            if (pointDejaUtilise) {
-                System.out.println("Point déjà utilisé, ignoré: " + p);
-                continue; // Ne pas revisiter un point
+            // CONTRAINTE #8: INTERDICTION STRICTE de tout passage double
+            if (estPointDejaVisite(cheminExistant, p)) {
+                System.out.println("❌ CONTRAINTE #8 VIOLÉE: Point déjà visité, segment refusé: " + p);
+                return false; // ARRÊT COMPLET si on tente de repasser
             }
             
             // Si c'est le premier point et qu'on l'a déjà ajouté, passer
@@ -268,6 +265,12 @@ public class TraceurFil {
             if (distance > distanceMaxLigneDroite) {
                 System.out.println("Segment dépasse distance max ligne droite, ignoré");
                 continue;
+            }
+            
+            // CONTRAINTE #7: Vérifier que le segment ne croise aucun segment existant
+            if (verifierCroisementAvecChemin(dernierPoint, p, cheminExistant)) {
+                System.out.println("❌ CONTRAINTE #7 VIOLÉE: Segment croise le chemin existant, refusé");
+                return false;
             }
             
             // Vérifier que le segment ne traverse aucun obstacle
@@ -506,8 +509,8 @@ public class TraceurFil {
     public void setDistanceSecurite(int distance) {
         this.distanceSecurite = distance;
     }
-
-     /**
+    
+    /**
      * Continue le traçage automatique du fil à partir d'un point donné.
      * Utilisé pour la sélection manuelle de chemin.
      * @param filExistant Le fil avec le chemin déjà tracé
@@ -607,4 +610,94 @@ public class TraceurFil {
         
         return filExistant;
     }
+    
+    /**
+     * Vérifie si un point a déjà été visité dans le chemin
+     */
+    private boolean estPointDejaVisite(ArrayList<Point> chemin, Point point) {
+        for (Point p : chemin) {
+            if (p.equals(point)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    /**
+     * Vérifie si un nouveau segment croise un segment existant du chemin
+     */
+    private boolean verifierCroisementAvecChemin(Point nouveauDebut, Point nouvelleFin, ArrayList<Point> chemin) {
+        if (chemin.size() < 2) {
+            return false;
+        }
+        
+        // Vérifier contre chaque segment existant (sauf le dernier qui se connecte)
+        for (int i = 0; i < chemin.size() - 2; i++) {
+            Point segmentDebut = chemin.get(i);
+            Point segmentFin = chemin.get(i + 1);
+            
+            if (segmentsSeCroisent(nouveauDebut, nouvelleFin, segmentDebut, segmentFin)) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Vérifie si deux segments se croisent (intersection géométrique)
+     */
+    private boolean segmentsSeCroisent(Point p1, Point p2, Point p3, Point p4) {
+        // Si les segments partagent un point commun, ce n'est pas un croisement
+        if (p1.equals(p3) || p1.equals(p4) || p2.equals(p3) || p2.equals(p4)) {
+            return false;
+        }
+        
+        // Calcul de l'orientation
+        int o1 = orientation(p1, p2, p3);
+        int o2 = orientation(p1, p2, p4);
+        int o3 = orientation(p3, p4, p1);
+        int o4 = orientation(p3, p4, p2);
+        
+        // Cas général : les segments se croisent si les orientations sont différentes
+        if (o1 != o2 && o3 != o4) {
+            return true;
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Calcule l'orientation de trois points (p, q, r)
+     * Retourne: 0 si colinéaires, 1 si horaire, 2 si anti-horaire
+     */
+    private int orientation(Point p, Point q, Point r) {
+        int val = (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
+        if (val == 0) return 0;
+        return (val > 0) ? 1 : 2;
+    }
+    
+    /**
+     * Trouve le point de transition sur la grille pour changer de ligne (évite les diagonales)
+     */
+    private Point trouverPointTransitionSurGrille(Point dernierPoint, int nouvelleLigneY) {
+        ArrayList<Point> intersections = membrane.ObtenirIntersections();
+        Point meilleurPoint = null;
+        int distanceMin = Integer.MAX_VALUE;
+        
+        // Chercher le point sur la nouvelle ligne qui est le plus proche du dernier point
+        for (Point inter : intersections) {
+            if (inter.y == nouvelleLigneY) {
+                int distance = calculerDistance(dernierPoint, inter);
+                if (distance < distanceMin) {
+                    distanceMin = distance;
+                    meilleurPoint = inter;
+                }
+            }
+        }
+        
+        return meilleurPoint;
+    }
+
 }
+
