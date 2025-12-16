@@ -221,20 +221,22 @@ public class MainDrawer {
          int longueurPixels =  convertToPixels(membrane.getLongueurPiece());
          int espacementPixels =  convertToPixels(membrane.getEspacement());
          int margePixels =  convertToPixels(membrane.getMargeContour());
+         int offsetXPixels = convertToPixels(membrane.getOffsetX());
+         int offsetYPixels = convertToPixels(membrane.getOffsetY());
          
          //dessiner ligne verticale
-         for(int x = margePixels; x <= largeurPixels - margePixels; x += espacementPixels){
+         for(int x = margePixels + offsetXPixels; x <= largeurPixels - margePixels + offsetXPixels; x += espacementPixels){
              int xEcran = origineAxes.x + x;
-             int yDebut = origineAxes.y - margePixels;
-             int yFin = origineAxes.y -(longueurPixels - margePixels);
+             int yDebut = origineAxes.y - (margePixels + offsetYPixels);
+             int yFin = origineAxes.y -((longueurPixels - margePixels) + offsetYPixels);
              g2d.drawLine(xEcran, yDebut, xEcran, yFin);  
          }
          
          //dessiner ligne horizontale
-         for(int y = margePixels; y <= longueurPixels - margePixels; y += espacementPixels){
+         for(int y = margePixels + offsetYPixels; y <= longueurPixels - margePixels + offsetYPixels; y += espacementPixels){
              int yEcran = origineAxes.y - y;
-             int xDebut = origineAxes.x + margePixels;
-             int xFin = origineAxes.x + (longueurPixels - margePixels);
+             int xDebut = origineAxes.x + margePixels + offsetXPixels;
+             int xFin = origineAxes.x + (longueurPixels - margePixels + offsetXPixels);
              g.drawLine(xDebut, yEcran, xFin, yEcran);  
          }
      }
