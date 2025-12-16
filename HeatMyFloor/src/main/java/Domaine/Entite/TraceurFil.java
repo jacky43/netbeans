@@ -10,13 +10,13 @@ public class TraceurFil {
     private Membrane membrane;
     private ArrayList<Meuble> meubles;
     private ArrayList<ElementChauffant> elementsChauffants;
-    private int distanceSecurite = 3; // 3 pouces  
+    private int distanceSecurite = 3; // 3 pouces murs et meubles
     private static final int DISTANCE_MIN_DRAIN = 6; // 6 pouces minimum des drains
-    private static final int DISTANCE_MIN_TOILETTE = 10; // 6 pouces minimum du drain toilette
+    private static final int DISTANCE_MIN_TOILETTE = 10; // 10 pouces minimum du drain toilette
     private static final int DISTANCE_MIN_ELEMENT_CHAUFFANT = 8; // 8 pouces minimum des éléments chauffants
     private static final int DISTANCE_MIN_ENTRE_FILS = 3; // 3 pouces entre fils parallèles
-    private static final int LONGUEUR_MAX_SEGMENT = 120;
-    private int distanceMaxLigneDroite; // Distance max par segment de ligne droite
+    private static final int LONGUEUR_MAX_SEGMENT = 120; // 10 pieds
+    private int distanceMaxLigneDroite; // Distance max par segment de ligne droite (saisie utilisateur)
 
     public TraceurFil(Membrane membrane, ArrayList<Meuble> meubles, ArrayList<ElementSelectionnable> elements) {
         this(membrane, meubles, elements, Integer.MAX_VALUE);
@@ -26,7 +26,10 @@ public class TraceurFil {
         this.membrane = membrane;
         this.meubles = meubles;
         this.elementsChauffants = new ArrayList<>();
-        this.distanceMaxLigneDroite = distanceMaxLigne;
+        // Limite utilisateur, bornée à la limite physique de 10 pieds
+        this.distanceMaxLigneDroite = (distanceMaxLigne > 0)
+            ? Math.min(distanceMaxLigne, LONGUEUR_MAX_SEGMENT)
+            : LONGUEUR_MAX_SEGMENT;
         if(elements != null){
             for(ElementSelectionnable el : elements){
                 if (el instanceof ElementChauffant elementChauffant){
@@ -39,7 +42,7 @@ public class TraceurFil {
     // Vérifie si un point est valide (pas trop proche d'un meuble ou élément chauffant)
     public boolean estPointValide(Point point) {
 
-        if(!respecterDistanceMur(point)){return false;}
+        if(!membrane.estIntersectionValide(point)){return false;}
         // Vérifier distance avec meubles
         for (Meuble meuble : meubles) {
             if (estTropProcheMeuble(point, meuble)) {
@@ -62,18 +65,12 @@ public class TraceurFil {
         return true;
     }
 
-    private boolean respecterDistanceMur(Point point){
-        int marge = distanceSecurite;
-        return point.x >= marge && point.x <= membrane.getLargeurPiece() - marge &&
-                point.y >= marge && point.y <= membrane.getLongueurPiece() - marge;
-    }
-
     private boolean estTropProcheMeuble(Point point, Meuble meuble) {
         Point posMeuble = meuble.getPosition();
-        int minX = posMeuble.x - DISTANCE_MIN_ELEMENT_CHAUFFANT;
-        int maxX = posMeuble.x + meuble.getLargeur() + DISTANCE_MIN_ELEMENT_CHAUFFANT;
-        int minY = posMeuble.y - meuble.getLongueur() - DISTANCE_MIN_ELEMENT_CHAUFFANT;
-        int maxY = posMeuble.y + DISTANCE_MIN_ELEMENT_CHAUFFANT;
+        int minX = posMeuble.x - distanceSecurite;
+        int maxX = posMeuble.x + meuble.getLargeur() + distanceSecurite;
+        int minY = posMeuble.y - meuble.getLongueur() - distanceSecurite;
+        int maxY = posMeuble.y + distanceSecurite;
 
         return point.x >= minX && point.x <= maxX &&
                 point.y >= minY && point.y <= maxY;
@@ -81,10 +78,10 @@ public class TraceurFil {
 
     private boolean estTropProcheElement(Point point, ElementChauffant element) {
         Point posElement = element.getPosition();
-        int minX = posElement.x - distanceSecurite;
-        int maxX = posElement.x + element.getLargeur() + distanceSecurite;
-        int minY = posElement.y - element.getLongueur() - distanceSecurite;
-        int maxY = posElement.y + distanceSecurite;
+        int minX = posElement.x - DISTANCE_MIN_ELEMENT_CHAUFFANT;
+        int maxX = posElement.x + element.getLargeur() + DISTANCE_MIN_ELEMENT_CHAUFFANT;
+        int minY = posElement.y - element.getLongueur() - DISTANCE_MIN_ELEMENT_CHAUFFANT;
+        int maxY = posElement.y + DISTANCE_MIN_ELEMENT_CHAUFFANT;
 
         return point.x >= minX && point.x <= maxX &&
                 point.y >= minY && point.y <= maxY;
@@ -483,20 +480,39 @@ public class TraceurFil {
      * Vérifie la proximité d'un segment avec le chemin existant (règle des 3 pouces)
      */
     private boolean verifierProximiteAvecChemin(Point segmentDebut, Point segmentFin, ArrayList<Point> cheminExistant) {
-        if (cheminExistant.size() < 4) {
+        if (cheminExistant.size() < 2) {
             return true; // Pas assez de segments pour vérifier
         }
 
-        // Vérifier contre chaque segment existant (sauf les 3 derniers pour éviter auto-collision)
-        for (int i = 0; i < cheminExistant.size() - 3; i++) {
+        boolean nouveauHorizontal = segmentDebut.y == segmentFin.y;
+        boolean nouveauVertical = segmentDebut.x == segmentFin.x;
+
+        // Vérifier uniquement les segments parallèles (règle des 3 pouces entre fils parallèles)
+        for (int i = 0; i < cheminExistant.size() - 1; i++) {
             Point existantDebut = cheminExistant.get(i);
             Point existantFin = cheminExistant.get(i + 1);
 
-            double distanceDebut = distancePointVersSegment(segmentDebut, existantDebut, existantFin);
-            double distanceFin = distancePointVersSegment(segmentFin, existantDebut, existantFin);
+            // Ignorer le dernier segment qui partage le point de départ
+            if (i == cheminExistant.size() - 2) {
+                continue;
+            }
 
-            if ((distanceDebut > 0 && distanceDebut < DISTANCE_MIN_ENTRE_FILS) ||
-                    (distanceFin > 0 && distanceFin < DISTANCE_MIN_ENTRE_FILS)) {
+            // Ignorer les segments qui partagent une extrémité avec le nouveau segment
+            if (existantDebut.equals(segmentDebut) || existantDebut.equals(segmentFin)
+                    || existantFin.equals(segmentDebut) || existantFin.equals(segmentFin)) {
+                continue;
+            }
+
+            boolean existantHorizontal = existantDebut.y == existantFin.y;
+            boolean existantVertical = existantDebut.x == existantFin.x;
+
+            boolean sontParalleles = (nouveauHorizontal && existantHorizontal) || (nouveauVertical && existantVertical);
+            if (!sontParalleles) {
+                continue; // La contrainte de 3" ne s'applique qu'aux segments parallèles
+            }
+
+            double distance = calculerDistanceEntreSegments(segmentDebut, segmentFin, existantDebut, existantFin);
+            if (distance > 0 && distance < DISTANCE_MIN_ENTRE_FILS) {
                 return false;
             }
         }
@@ -584,7 +600,7 @@ public class TraceurFil {
             }
 
             if(meuble instanceof MeubleAvecDrain meubleAvecDrain){
-                if(estTropProcheMeuble(point, meubleAvecDrain)){
+                if(estTropProcheDrain(point, meubleAvecDrain)){
                     return false;
                 }
             }
