@@ -49,9 +49,8 @@ public class MainWindow extends javax.swing.JFrame {
     
     // Mode translation de la membrane
     private boolean modeTranslationActive = false;
-    private boolean isDraggingIntersection = false;
-    private Point intersectionOriginale = null;
-    private Point intersectionDragStart = null;
+    private boolean isSelectingTranslationZone = false; // conservé pour compatibilité mais non utilisé
+    private Point translationStartWorld = null; // non utilisé après migration panneau
     
     // Mode sélection manuelle chemin fil
     private boolean modeSelectionCheminActive = false;
@@ -349,7 +348,7 @@ public class MainWindow extends javax.swing.JFrame {
 
         translationMembraneButton.setText("Translation Membrane");
         translationMembraneButton.addActionListener((java.awt.event.ActionEvent evt) -> {
-            toggleModeTranslation();
+            appliquerTranslationMembraneDepuisPanneau();
         });
         buttonTopPanel.add(translationMembraneButton);
 
@@ -988,18 +987,7 @@ JPanel row(String label, JTextField ft, JTextField in, JTextField num, JTextFiel
         Point positionSouris = e.getPoint();
         Point positionMonde = screenToWorld(positionSouris);
         
-        // Mode translation: détecter clic sur une intersection
-        if (modeTranslationActive) {
-            Point intersectionProche = controller.TrouverIntersectionProche(positionMonde, 5); // Tolérance de 5 pouces
-            if (intersectionProche != null) {
-                isDraggingIntersection = true;
-                intersectionOriginale = intersectionProche;
-                intersectionDragStart = positionSouris;
-                drawingPanel.setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.HAND_CURSOR));
-                System.out.println("Début translation intersection: " + intersectionOriginale);
-                return;
-            }
-        }
+        // Mode translation par panneau : pas de sélection dans le canvas
     
         Object selection = controller.SelectionnerElement(positionMonde);
         
@@ -1018,16 +1006,7 @@ JPanel row(String label, JTextField ft, JTextField in, JTextField num, JTextFiel
     
     private void drawingPanelMouseDragged(java.awt.event.MouseEvent e){ 
         
-        // Mode translation d'intersection
-        if (isDraggingIntersection && intersectionOriginale != null && intersectionDragStart != null) {
-            Point positionActuelle = e.getPoint();
-            Point nouvellePositionMonde = screenToWorld(positionActuelle);
-            
-            // Translater l'intersection dans le controller
-            controller.TranslaterIntersection(intersectionOriginale, nouvellePositionMonde);
-            rafraichirVue();
-            return;
-        }
+        // Mode translation par panneau : pas de drag sur le canvas
         
         //mode normal deplacement elements
         if (!isDragging || dragStartPoint == null || elementStartPosition == null) {
@@ -1063,18 +1042,7 @@ JPanel row(String label, JTextField ft, JTextField in, JTextField num, JTextFiel
     
     private void drawingPanelMouseReleased(java.awt.event.MouseEvent e) { 
         
-        //mode translation intersecrtion
-        if (isDraggingIntersection) {
-            isDraggingIntersection = false;
-            intersectionOriginale = null;
-            intersectionDragStart = null;
-            
-            drawingPanel.setCursor(java.awt.Cursor.getDefaultCursor());
-            
-            System.out.println("Fin translation intersection");
-            rafraichirVue();
-            return;
-        }
+        // Mode translation par panneau : rien à gérer sur relâchement du canvas
 
         //mode normal deplacement
         if (isDragging) {
@@ -1909,7 +1877,7 @@ JPanel row(String label, JTextField ft, JTextField in, JTextField num, JTextFiel
      * Active/désactive le mode translation de la membrane
      * En mode translation, l'utilisateur peut déplacer les intersections de la grille
      */
-    private void toggleModeTranslation() {
+    private void appliquerTranslationMembraneDepuisPanneau() {
         if (controller.ObtenirMembrane() == null) {
             javax.swing.JOptionPane.showMessageDialog(this,
                 "Veuillez d'abord activer la membrane.",
@@ -1917,21 +1885,47 @@ JPanel row(String label, JTextField ft, JTextField in, JTextField num, JTextFiel
                 javax.swing.JOptionPane.ERROR_MESSAGE);
             return;
         }
-        
-        modeTranslationActive = !modeTranslationActive;
-        
-        if (modeTranslationActive) {
-            translationMembraneButton.setText("✓ Translation Active");
-            translationMembraneButton.setBackground(new java.awt.Color(144, 238, 144)); // Vert clair
+
+        javax.swing.JTextField dxField = new javax.swing.JTextField();
+        javax.swing.JTextField dyField = new javax.swing.JTextField();
+
+        Object[] message = {
+            "Déplacement en X (pouces, + vers la droite):", dxField,
+            "Déplacement en Y (pouces, + vers le haut):", dyField
+        };
+
+        int option = javax.swing.JOptionPane.showConfirmDialog(
+            this,
+            message,
+            "Translation de la membrane",
+            javax.swing.JOptionPane.OK_CANCEL_OPTION,
+            javax.swing.JOptionPane.PLAIN_MESSAGE
+        );
+
+        if (option != javax.swing.JOptionPane.OK_OPTION) {
+            return;
+        }
+
+        int dx, dy;
+        try {
+            dx = Integer.parseInt(dxField.getText().trim());
+            dy = Integer.parseInt(dyField.getText().trim());
+        } catch (NumberFormatException ex) {
             javax.swing.JOptionPane.showMessageDialog(this,
-                "Mode translation activé.\nCliquez et glissez les intersections de la membrane pour les déplacer.",
+                "Valeurs numériques requises pour la translation.",
+                "Erreur",
+                javax.swing.JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        boolean ok = controller.TranslaterMembrane(new java.awt.Point(dx, dy));
+        if (!ok) {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                "Translation ignorée (delta nul ou sortie de la pièce).",
                 "Info",
                 javax.swing.JOptionPane.INFORMATION_MESSAGE);
-        } else {
-            translationMembraneButton.setText("Translation Membrane");
-            translationMembraneButton.setBackground(null);
         }
-        
+
         rafraichirVue();
     }
     
@@ -1957,10 +1951,8 @@ JPanel row(String label, JTextField ft, JTextField in, JTextField num, JTextFiel
             return;
         }
         
-        // Désactiver le mode translation si actif
-        if (modeTranslationActive) {
-            toggleModeTranslation();
-        }
+        // Désactiver le mode translation si actif (plus utilisé)
+        modeTranslationActive = false;
         
         modeSelectionCheminActive = !modeSelectionCheminActive;
         
