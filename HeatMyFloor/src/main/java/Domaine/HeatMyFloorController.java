@@ -318,20 +318,68 @@ public class HeatMyFloorController {
         
         if (succes) {
             System.out.println("Translation réussie: " + pointGrille + " -> " + nouvellePosition);
-            
-            // Régénérer le fil car la grille a été modifiée
-            if (maPiece.getThermostat() != null) {
-                Fil filActuel = maPiece.getFilChauffant();
-                int longueurMax = filActuel != null ? filActuel.getLongueurMaximale() : 0;
-                TraceurFil traceur = new TraceurFil(membrane, maPiece.getMeubles(), maPiece.getElements(), 120);
-                Fil nouveauFil = traceur.tracerFilAutomatique(maPiece.getThermostat().getPosition(), longueurMax);
-                if (nouveauFil != null) {
-                    maPiece.setFilChauffant(nouveauFil);
-                }
-            }
+            regenererFilApresModificationMembrane();
         }
         
         return succes;
+    }
+
+    public boolean TranslaterZoneMembrane(java.awt.Rectangle zoneMonde, Point delta) {
+        Membrane membrane = maPiece.getMembrane();
+        if (membrane == null) {
+            return false;
+        }
+
+        if (delta == null || (delta.x == 0 && delta.y == 0)) {
+            return false;
+        }
+
+        boolean modifie = membrane.translaterZone(zoneMonde, delta);
+        if (modifie) {
+            System.out.println("Translation zone réussie: zone=" + zoneMonde + " delta=" + delta);
+            regenererFilApresModificationMembrane();
+        }
+        return modifie;
+    }
+
+    public boolean TranslaterMembrane(Point delta) {
+        Membrane membrane = maPiece.getMembrane();
+        if (membrane == null) {
+            return false;
+        }
+
+        boolean modifie = membrane.translaterMembrane(delta);
+        if (modifie) {
+            System.out.println("Translation complète réussie: delta=" + delta);
+            regenererFilApresModificationMembrane();
+        }
+        return modifie;
+    }
+
+    private void regenererFilApresModificationMembrane() {
+        if (maPiece.getThermostat() == null) {
+            return;
+        }
+
+        Fil filActuel = maPiece.getFilChauffant();
+        int longueurMax = filActuel != null ? filActuel.getLongueurMaximale() : 0;
+        if (longueurMax <= 0) {
+            longueurMax = 120; // valeur par défaut si aucun fil n'existe encore
+        }
+
+        TraceurFil traceur = new TraceurFil(maPiece.getMembrane(), maPiece.getMeubles(), maPiece.getElements(), 120);
+        Fil nouveauFil = traceur.tracerFilAutomatique(maPiece.getThermostat().getPosition(), longueurMax);
+
+        if (nouveauFil != null && nouveauFil.getChemin().size() >= 2) {
+            maPiece.setFilChauffant(nouveauFil);
+            gestionnaireCheminFil = new GestionnaireCheminFil(
+                nouveauFil,
+                maPiece.getMembrane(),
+                traceur
+            );
+        } else {
+            System.out.println("Aucun tracé valide après translation de membrane.");
+        }
     }
     
     // ==================== SÉLECTION MANUELLE CHEMIN FIL ====================
