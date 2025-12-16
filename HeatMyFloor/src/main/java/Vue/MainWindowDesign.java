@@ -340,6 +340,11 @@ public class MainWindowDesign extends javax.swing.JFrame {
         fichierMenu.add(sauvegarderItem);
 
         exporterItem.setText("Exporter");
+        exporterItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                exporterItemActionPerformed(evt);
+            }
+        });
         fichierMenu.add(exporterItem);
 
         importerItem.setText("Importer");
@@ -393,12 +398,6 @@ public class MainWindowDesign extends javax.swing.JFrame {
     }//GEN-LAST:event_longeurJTextActionPerformed
 
     private void drawingCenterPanelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_drawingCenterPanelMouseClicked
-        // TODO : Test pour visualiser les positions x et y 
-//        int h = drawingCenterPanel.getHeight();
-//        int w = drawingCenterPanel.getWidth();
-//        positionXJText.setText(Integer.toString(h));
-//        positionYJText.setText(Integer.toString(w));
-        
         Point p = evt.getPoint();
         
         positionXJText.setText(Integer.toString(p.x));
@@ -431,6 +430,10 @@ public class MainWindowDesign extends javax.swing.JFrame {
     private void nouvellePieceJButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_nouvellePieceJButtonActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_nouvellePieceJButtonActionPerformed
+
+    private void exporterItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exporterItemActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_exporterItemActionPerformed
 
     /**
      * @param args the command line arguments

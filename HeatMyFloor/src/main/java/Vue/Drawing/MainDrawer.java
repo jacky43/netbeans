@@ -1,7 +1,10 @@
 package Vue.Drawing;
 
+import Domaine.DTO.FilDTO;
+import Domaine.DTO.MembraneDTO;
 import Domaine.DTO.MeubleDTO;
 import Domaine.DTO.PieceDTO;
+import Domaine.DTO.ThermostatDTO;
 import Domaine.Entite.Fil;
 import Domaine.Entite.Membrane;
 import Domaine.Entite.Thermostat;
@@ -47,21 +50,21 @@ public class MainDrawer {
         g.setColor(Color.BLACK);
         g.drawPolygon(formeConvertie);
         // Dessiner la membrane si elle existe
-        Membrane membrane = controller.ObtenirMembrane();
+        MembraneDTO membrane = controller.ObtenirMembrane();
         if (membrane != null) {
             drawMembrane(g, membrane);
         }
         
         // Dessiner le fil chauffant
-        Fil fil = controller.ObtenirFilChauffant();
+        FilDTO fil = controller.ObtenirFilChauffant();
         if (fil != null) {
             drawFil(g, fil);
         }
         
         drawMeubles(g, piece.getMeubles());
         
-        // Dessiner le thermostat
-        Thermostat thermostat = controller.ObtenirThermostat();
+//         Dessiner le thermostat
+        ThermostatDTO thermostat = controller.ObtenirThermostat();
         if (thermostat != null) {
            drawThermostat(g, thermostat);
         }
@@ -207,7 +210,7 @@ public class MainDrawer {
         return new Polygon(xPoints, yPoints, p_poly.npoints);
     }
     
-         private void drawMembrane(Graphics g, Membrane membrane){
+         private void drawMembrane(Graphics g, MembraneDTO membrane){
          
          Graphics2D g2d = (Graphics2D) g;
          g2d.setColor(new Color(255, 162, 96));
@@ -236,7 +239,7 @@ public class MainDrawer {
          }
      }
     
-     private void drawFil(Graphics g, Fil fil){
+     private void drawFil(Graphics g, FilDTO fil){
          ArrayList<Point> chemin = fil.getChemin();
          if(chemin.size() < 2) return;
          
@@ -257,7 +260,7 @@ public class MainDrawer {
          }
      }
     
-    private void drawThermostat(Graphics g, Thermostat thermostat){
+    private void drawThermostat(Graphics g, ThermostatDTO thermostat){
         Point position = thermostat.getPosition();
         int x = convertToPixels(position.x) + origineAxes.x;
         int y = origineAxes.y - convertToPixels(position.y);

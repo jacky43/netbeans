@@ -1,9 +1,6 @@
 package Domaine;
 
-import Domaine.DTO.ElementChauffantDTO;
-import Domaine.DTO.MeubleDTO;
-import Domaine.DTO.PieceDTO;
-import Domaine.DTO.ThermostatDTO;
+import Domaine.DTO.*;
 import Domaine.Entite.ElementChauffant;
 import Domaine.Entite.Meuble;
 import Domaine.Entite.Piece;
@@ -26,6 +23,7 @@ public class HeatMyFloorController {
     private Piece maPiece;
     private boolean estInitialise;
     private ActionHistory history;
+    private SelectionInfoDTO derniereSelection = null;
     
     public HeatMyFloorController()
     {
@@ -118,11 +116,11 @@ public class HeatMyFloorController {
         ElementSelectionnable elementSelectionne = maPiece.SelectionnerElement(position);
         return construireDto(elementSelectionne);
     }
-    
+
     public boolean ModifierElementSelectionne(Point nouvellePosition, Integer nouvelleLargeur, Integer nouvelleLongueur) 
     {  
       //  history.saveState(maPiece);
-        
+
         ElementSelectionnable element = maPiece.ObtenirElementSelectionne();
         if(element instanceof ElementChauffant || element instanceof Thermostat){
             if(nouvelleLargeur != null){
@@ -139,6 +137,7 @@ public class HeatMyFloorController {
                     maPiece.SupprimerFilChauffant();
                 }
             }
+            maPiece.genererFil();
             return true;
             
         }
@@ -225,7 +224,7 @@ public class HeatMyFloorController {
         maPiece.InitialiserMembrane(espacement, marge);
     }
     
-    public Membrane ObtenirMembrane() {
+    public MembraneDTO ObtenirMembrane() {
         return maPiece.getMembrane();
     }
     
@@ -234,7 +233,7 @@ public class HeatMyFloorController {
         maPiece.AjouterThermostat(dto);
     }
     
-    public Thermostat ObtenirThermostat() {
+    public ThermostatDTO ObtenirThermostat() {
         return maPiece.getThermostat();
     }
     
@@ -243,7 +242,7 @@ public class HeatMyFloorController {
         maPiece.TracerFilChauffant(longueurMax, distanceMaxLigne);
     }
     
-    public Fil ObtenirFilChauffant() {
+    public FilDTO ObtenirFilChauffant() {
         return maPiece.getFilChauffant();
     }
     
@@ -259,62 +258,72 @@ public class HeatMyFloorController {
     {
         maPiece.importer(path);
     }
-    
-    // Active ou désactive la régénération automatique du fil Quand activée, le fil sera recalculé après chaque modification (ajout/suppression/modification d'élément)
 
-    public void ActiverAutoRegenerationFil(boolean activer) {
-        maPiece.setAutoRegenerationFil(activer);
-    }
-    
-    public boolean EstAutoRegenerationActive() {
-        return maPiece.estAutoRegenerationActive();
-    }
-    
-    //Trouve l'intersection de la membrane la plus proche d'une position donnée
-    public Point TrouverIntersectionProche(Point position, int tolerance) {
-        Membrane membrane = maPiece.getMembrane();
-        if (membrane == null) {
-            return null;
+    public SelectionInfoDTO SelectionnerElementAvecType(Point position) {
+        if (maPiece == null) {
+            return SelectionInfoDTO.aucun();
         }
-        
-        ArrayList<Point> intersections = membrane.ObtenirIntersections();
-        Point plusProche = null;
-        double distanceMin = Double.MAX_VALUE;
-        
-        for (Point intersection : intersections) {
-            double distance = Math.sqrt(
-                Math.pow(intersection.x - position.x, 2) + 
-                Math.pow(intersection.y - position.y, 2)
+        derniereSelection = maPiece.SelectionnerElementAvecType(position);
+        return derniereSelection;
+    }
+
+    public SelectionInfoDTO getDerniereSelection() {
+        return derniereSelection;
+    }
+
+    public boolean ModifierPositionDrain(Point nouveauCentreDrain) {
+        ElementSelectionnable element = maPiece.ObtenirElementSelectionne();
+        if (element instanceof MeubleAvecDrain meubleAvecDrain) {
+            // Snap to boundary
+            Point drainSnapped = snapDrainToMeubleBoundary(
+                    meubleAvecDrain.getLargeur(),
+                    meubleAvecDrain.getLongueur(),
+                    nouveauCentreDrain,
+                    meubleAvecDrain.getDiametreDrain()
             );
-            
-            if (distance < distanceMin && distance <= tolerance) {
-                distanceMin = distance;
-                plusProche = intersection;
-            }
+            meubleAvecDrain.setCentreDrain(drainSnapped);
+            return true;
         }
-        
-        return plusProche;
-    }
-    
-    //Translate une intersection de la membrane vers une nouvelle position
-
-    public boolean TranslaterIntersection(Point intersectionOriginale, Point nouvellePosition) {
-        Membrane membrane = maPiece.getMembrane();
-        if (membrane == null) {
-            return false;
-        }
-        
-        // Trouver le point de grille le plus proche de l'intersection originale
-        Point pointGrille = membrane.trouverIntersectionLaPlusProche(intersectionOriginale);
-        
-        // Translater ce point vers la nouvelle position
-        boolean succes = membrane.translaterIntersection(pointGrille, nouvellePosition);
-        
-        if (succes) {
-            System.out.println("Translation réussie: " + pointGrille + " -> " + nouvellePosition);
-        }
-        
-        return succes;
+        return false;
     }
 
+    private Point snapDrainToMeubleBoundary(int largeur, int longueur, Point centreDrain, int diametreDrain) {
+        int rayonDrain = diametreDrain / 2;
+
+        int x = centreDrain.x;
+        int y = centreDrain.y;
+
+        // Valid interior zone (drain fully inside meuble)
+        int xMin = rayonDrain;
+        int xMax = largeur - rayonDrain;
+        int yMin = rayonDrain;
+        int yMax = longueur - rayonDrain;
+
+        // If within valid interior bounds, keep it inside
+        if (x >= xMin && x <= xMax && y >= yMin && y <= yMax) {
+            return new Point(x, y);
+        }
+
+        // Outside: snap to closest edge with drain touching from outside
+        double distGauche = Math.abs(x - 0);
+        double distDroite = Math.abs(x - largeur);
+        double distBas = Math.abs(y - 0);
+        double distHaut = Math.abs(y - longueur);
+
+        double minDist = Math.min(Math.min(distGauche, distDroite), Math.min(distBas, distHaut));
+
+        if (minDist == distGauche) {
+            // Outside left: center at -rayonDrain (drain touches from left)
+            return new Point(-rayonDrain, Math.max(rayonDrain, Math.min(y, longueur - rayonDrain)));
+        } else if (minDist == distDroite) {
+            // Outside right: center at largeur + rayonDrain
+            return new Point(largeur + rayonDrain, Math.max(rayonDrain, Math.min(y, longueur - rayonDrain)));
+        } else if (minDist == distBas) {
+            // Outside bottom: center at -rayonDrain
+            return new Point(Math.max(rayonDrain, Math.min(x, largeur - rayonDrain)), -rayonDrain);
+        } else {
+            // Outside top: center at longueur + rayonDrain
+            return new Point(Math.max(rayonDrain, Math.min(x, largeur - rayonDrain)), longueur + rayonDrain);
+        }
+    }
 }

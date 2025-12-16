@@ -7,10 +7,6 @@ package Domaine.DTO;
 import java.awt.Point;
 import java.util.UUID;
 
-/**
- *
- * @author jacky
- */
 public class ThermostatDTO implements ElementSelectionnableDTO{
     
     private Point position;

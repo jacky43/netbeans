@@ -1,9 +1,8 @@
 package Domaine.Entite;
 
 
-import Domaine.DTO.MeubleDTO;
-import Domaine.DTO.ElementChauffantDTO;
-import Domaine.DTO.ThermostatDTO;
+import Domaine.DTO.*;
+
 import java.awt.Point;
 import java.awt.Polygon;
 import java.awt.Rectangle;
@@ -25,7 +24,7 @@ public class Piece implements Cloneable, Serializable {
   
     private ArrayList<ElementSelectionnable> elements;
     private ArrayList<ElementChauffant> elementChauffants;
-    private Membrane menbrane;
+    private Membrane membrane;
     private Thermostat thermostat;
     private Fil fil;
     private int largeurReellePouces;
@@ -199,6 +198,8 @@ public class Piece implements Cloneable, Serializable {
         Point positionInitiale = new Point(0, dto.getLongueur());
         dto = new ElementChauffantDTO(positionInitiale, dto.getLongueur(),dto.getLargeur());
         elements.add(new ElementChauffant(dto));
+
+        regenererFilSiNecessaire();
     }
     
     public Point TrouverPositionSurMurLePlusProche(Point positionRelative, int longueur,int largeur){
@@ -313,15 +314,20 @@ public class Piece implements Cloneable, Serializable {
         Rectangle bounds = forme.getBounds();
         int largeur = largeurReellePouces > 0 ? largeurReellePouces : (int) Math.round(bounds.getWidth());
         int longueur = longueurReellePouces > 0 ? longueurReellePouces : (int) Math.round(bounds.getHeight());
-        //menbrane = new Membrane((int)bounds.getWidth(), (int)bounds.getHeight(), espacement, marge);
-        menbrane = new Membrane(largeur, longueur, espacement, marge);
+        //membrane = new Membrane((int)bounds.getWidth(), (int)bounds.getHeight(), espacement, marge);
+        membrane = new Membrane(largeur, longueur, espacement, marge);
         
         //regener le fil
         regenererFilSiNecessaire();
     }
     
-    public Membrane getMembrane() {
-        return menbrane;
+    public MembraneDTO getMembrane() {
+        if(membrane !=null)
+        {
+            return new MembraneDTO(membrane.getLargeurPiece(),membrane.getLongueurPiece(),membrane.getEspacement(),membrane.getMargeContour());
+        }
+        
+        return null;
     }
     
     // Méthodes pour le thermostat
@@ -330,8 +336,15 @@ public class Piece implements Cloneable, Serializable {
         elements.add(thermostat);
     }
     
-    public Thermostat getThermostat() {
-        return thermostat;
+    public ThermostatDTO getThermostat() {
+        
+        if(thermostat !=null)
+        {
+        ThermostatDTO temp = new ThermostatDTO(thermostat.getPosition(),thermostat.getLongueur(),thermostat.getLargeur());
+        return temp;
+        }
+        
+        return null;
     }
     
     // Méthodes pour le fil chauffant
@@ -340,10 +353,10 @@ public class Piece implements Cloneable, Serializable {
     private boolean autoRegenerationActive = true;
     
     public void TracerFilChauffant(int longueurMax, int distanceMaxLigne) {
-        if (thermostat != null && menbrane != null) {
+        if (thermostat != null && membrane != null) {
             this.longueurMaxFil = longueurMax;
             this.distanceMaxLigneFil = distanceMaxLigne;
-            TraceurFil traceur = new TraceurFil(menbrane, getMeubles(), elements, distanceMaxLigne);
+            TraceurFil traceur = new TraceurFil(membrane, getMeubles(), elements, distanceMaxLigne);
             fil = traceur.tracerFilAutomatique(thermostat.getPosition(), longueurMax);
         }
     }
@@ -365,19 +378,31 @@ public class Piece implements Cloneable, Serializable {
          if (thermostat == null ) {
             return;
         }
-        if (menbrane == null ) {
+        if (membrane == null ) {
             return;
         }
         if (longueurMaxFil <= 0) {
             return;
         }
-        TraceurFil traceur = new TraceurFil(menbrane, getMeubles(), elements, distanceMaxLigneFil);
+        TraceurFil traceur = new TraceurFil(membrane, getMeubles(), elements, distanceMaxLigneFil);
         fil = traceur.tracerFilAutomatique(thermostat.getPosition(), longueurMaxFil);
     }
 
+    public void genererFil()
+    {
+        regenererFilSiNecessaire();
+    }
+
     
-    public Fil getFilChauffant() {
-        return fil;
+    public FilDTO getFilChauffant() {
+        
+        if(fil !=null)
+        {   
+        FilDTO filtemp = new FilDTO(thermostat.getPosition(),fil.getLongueurMaximale(),fil.getChemin(), fil.getLongueurActuelle());
+        return filtemp;
+        }
+        
+        return null;
     }
     
     public void SupprimerFilChauffant() {
@@ -407,8 +432,67 @@ public class Piece implements Cloneable, Serializable {
         this.forme = p.forme;
         this.thermostat = p.thermostat;
         this.fil = p.fil;
-        this.menbrane = p.menbrane;
+        this.membrane = p.membrane;
         this.largeurReellePouces = p.largeurReellePouces;
         this.longueurReellePouces = p.longueurReellePouces;
+    }
+
+    public SelectionInfoDTO SelectionnerElementAvecType(Point p_position) {
+        // Check drains first (higher priority)
+        for (ElementSelectionnable element : elements) {
+            if (element instanceof MeubleAvecDrain meubleAvecDrain) {
+                Point centreDrain = meubleAvecDrain.getCentreDrain();
+                Point positionMeuble = meubleAvecDrain.getPosition();
+
+                // Convert drain center to absolute position
+                Point drainAbsolu = new Point(
+                        positionMeuble.x + centreDrain.x,
+                        positionMeuble.y - meubleAvecDrain.getLongueur() + centreDrain.y
+                );
+
+                int rayonDrain = meubleAvecDrain.getDiametreDrain() / 2;
+                double distance = p_position.distance(drainAbsolu);
+
+                if (distance <= rayonDrain) {
+                    // Select the meuble but mark as drain selection
+                    for (ElementSelectionnable el : elements) {
+                        el.setSelectionne(el == meubleAvecDrain);
+                    }
+                    return new SelectionInfoDTO(
+                            meubleAvecDrain.ToDto(),
+                            SelectionInfoDTO.TypeSelection.DRAIN,
+                            new Point(centreDrain)
+                    );
+                }
+            }
+        }
+
+        // Then check element bodies
+        for (ElementSelectionnable element : elements) {
+            if (contientPoint(element, p_position)) {
+                for (ElementSelectionnable el : elements) {
+                    el.setSelectionne(el == element);
+                }
+
+                SelectionInfoDTO.TypeSelection type;
+                if (element instanceof Thermostat) {
+                    type = SelectionInfoDTO.TypeSelection.THERMOSTAT;
+                } else if (element instanceof ElementChauffant) {
+                    type = SelectionInfoDTO.TypeSelection.ELEMENT_CHAUFFANT;
+                } else if (element instanceof Meuble) {
+                    type = SelectionInfoDTO.TypeSelection.MEUBLE_BODY;
+                } else {
+                    type = SelectionInfoDTO.TypeSelection.AUCUN;
+                }
+
+                return new SelectionInfoDTO((ElementSelectionnableDTO) element.ToDto(), type, null);
+            }
+        }
+
+        // Nothing selected
+        for (ElementSelectionnable element : elements) {
+            element.setSelectionne(false);
+        }
+        return SelectionInfoDTO.aucun();
     }
 }
