@@ -292,10 +292,11 @@ public class TraceurFil {
         
         // Maintenant traiter tous les points de la ligne (sans points intermédiaires)
         for (Point p : ligne) {
-            // CONTRAINTE #8: Si le point est déjà visité, on stoppe la ligne pour éviter de repasser
+            // CONTRAINTE #8: Si le point est déjà visité, on l'ignore mais on poursuit la ligne
+            // pour continuer le serpentin sans repasser au même endroit.
             if (estPointDejaVisite(cheminExistant, p)) {
-                System.out.println("❌ Point déjà visité, arrêt de la ligne: " + p);
-                return false; // Stopper pour éviter de reboucler sur le chemin existant
+                System.out.println("⚠️ Point déjà visité, segment ignoré: " + p);
+                continue;
             }
             
             // Si c'est le premier point et qu'on l'a déjà ajouté, passer
