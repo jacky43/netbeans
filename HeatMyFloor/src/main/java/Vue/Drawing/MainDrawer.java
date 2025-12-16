@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
+import java.awt.Stroke;
 
 public class MainDrawer {
 
@@ -233,6 +234,37 @@ public class MainDrawer {
              int xDebut = origineAxes.x + margePixels;
              int xFin = origineAxes.x + (longueurPixels - margePixels);
              g.drawLine(xDebut, yEcran, xFin, yEcran);  
+         }
+
+         ArrayList<Point[]> deplacements = membrane.obtenirIntersectionsDeplacees();
+         if (!deplacements.isEmpty()) {
+             Color couleurLien = new Color(200, 110, 60);
+             Color couleurOrigine = new Color(90, 90, 90);
+             Color couleurCible = new Color(165, 42, 42);
+             BasicStroke traitPointille = new BasicStroke(1.2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 1.0f, new float[]{4.0f, 4.0f}, 0.0f);
+             Stroke traitPrecedent = g2d.getStroke();
+             g2d.setStroke(traitPointille);
+
+             for (Point[] paire : deplacements) {
+                 Point origine = paire[0];
+                 Point cible = paire[1];
+
+                 int xOrigine = origineAxes.x + convertToPixels(origine.x);
+                 int yOrigine = origineAxes.y - convertToPixels(origine.y);
+                 int xCible = origineAxes.x + convertToPixels(cible.x);
+                 int yCible = origineAxes.y - convertToPixels(cible.y);
+
+                 g2d.setColor(couleurLien);
+                 g2d.drawLine(xOrigine, yOrigine, xCible, yCible);
+
+                 g2d.setColor(couleurOrigine);
+                 g2d.fillOval(xOrigine - 3, yOrigine - 3, 6, 6);
+
+                 g2d.setColor(couleurCible);
+                 g2d.fillOval(xCible - 4, yCible - 4, 8, 8);
+             }
+
+             g2d.setStroke(traitPrecedent);
          }
      }
     
